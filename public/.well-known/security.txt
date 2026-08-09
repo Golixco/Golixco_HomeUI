@@ -1,0 +1,5 @@
+# Security contact information for Golixco
+# Please update this email address before final production deployment.
+Contact: mailto:security@golixco.com
+Preferred-Languages: en
+Canonical: https://golixco.com/.well-known/security.txt

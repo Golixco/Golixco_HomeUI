@@ -1,0 +1,435 @@
+{
+  "knowledge_base": {
+    "name": "Golixco Company Knowledge Base",
+    "version": "1.0.0",
+    "last_updated": "2026",
+    "knowledge_scope": "company_only",
+
+    "purpose": {
+      "description": "This knowledge base contains authoritative information about Golixco as a company, its identity, history, products, projects, public company presence, website direction, philosophy, and officially documented plans.",
+      "primary_subject": "Golixco",
+      "excluded_subjects": [
+        "The identity of the person behind Golixco",
+        "Personal biography of the person behind Golixco",
+        "Personal social media accounts",
+        "Personal GitHub accounts",
+        "Personal portfolio websites",
+        "Personal achievements",
+        "Personal education",
+        "Personal employment",
+        "Personal contact information",
+        "Private information about individuals associated with Golixco"
+      ]
+    },
+
+    "company": {
+      "name": "Golixco",
+      "type": "AI-focused startup/company",
+      "status": "startup/company",
+      "industry": [
+        "Artificial Intelligence",
+        "Software",
+        "Technology",
+        "Product Development"
+      ],
+
+      "description": "Golixco is a company/startup focused on solving problems and building products using the current era of artificial intelligence.",
+
+      "core_idea": "Golixco explores what can be built when modern artificial intelligence, software, creativity, experimentation, and product development are combined.",
+
+      "current_structure": {
+        "description": "Golixco is being built as a single-person company powered by a person and AI.",
+        "official_roles_assigned": false,
+        "roles_currently_assigned": [],
+        "role_policy": "Do not assign or infer founder, CEO, CTO, co-founder, president, employee, executive, or other formal roles to any individual unless such information is explicitly added to this knowledge base."
+      },
+
+      "company_identity": {
+        "independent_identity": true,
+        "identity_policy": "Golixco should be treated as an independent company identity.",
+        "personal_identity_linkage": "Not part of this knowledge base."
+      }
+    },
+
+    "origin_and_history": {
+      "summary": "Golixco began as a name and online gaming handle before eventually evolving into an idea and then into a company/startup concept.",
+
+      "timeline": [
+        {
+          "year": 2020,
+          "type": "origin",
+          "title": "Golixco begins as a name",
+          "description": "Golixco was a name and gaming handle used to create a unique online identity and character.",
+          "company_status_at_time": "Not yet a company or startup."
+        },
+        {
+          "period": "later",
+          "type": "evolution",
+          "title": "The name becomes an idea",
+          "description": "Golixco gradually evolved from being only a name into a thought and eventually into the idea of creating a company."
+        },
+        {
+          "year": 2026,
+          "type": "company",
+          "title": "Golixco becomes a startup/company concept",
+          "description": "Golixco developed into a startup/company concept focused on building products and solving problems using AI."
+        },
+        {
+          "year": 2026,
+          "type": "domain",
+          "title": "Golixco acquires its domain",
+          "description": "The Golixco company domain was acquired in 2026."
+        }
+      ],
+
+      "important_history_rule": "Do not describe Golixco as having been founded in 2020. 2020 refers to the origin of the name/handle, not the founding of the company."
+    },
+
+    "name": {
+      "official_name": "Golixco",
+      "official_abbreviation": null,
+      "official_acronym": null,
+
+      "informal_interpretation": {
+        "is_official": false,
+        "description": "Golixco is not officially an abbreviation. The letters X and CO have informal interpretations that fit the identity of the company.",
+        "X": "Adding an X can give a futuristic and technological feeling.",
+        "CO": "CO naturally resembles Company."
+      },
+
+      "naming_rule": "Never claim that Golixco officially stands for a specific phrase unless an official meaning is added to this knowledge base."
+    },
+
+    "philosophy": {
+      "core_belief": "The current era of AI makes it possible for a very small operation to build meaningful software and products using AI as a major part of the development process.",
+      "approach": [
+        "Solve problems",
+        "Build products",
+        "Use modern AI",
+        "Experiment",
+        "Combine AI with software",
+        "Explore what is possible with small-scale AI-powered company structures"
+      ]
+    },
+
+    "products": {
+      "current_product_count": 1,
+
+      "official_products": [
+        {
+          "name": "Lolixco",
+          "relationship_to_golixco": "Product/project under Golixco",
+          "status": "Concept/product under development",
+          "category": "Editor-focused platform",
+          "description": "Lolixco is intended to be a platform focused on editors and editing culture.",
+          "target_domain": [
+            "Video editing",
+            "Entertainment edits",
+            "Creator culture",
+            "Editing communities"
+          ],
+          "content_areas": [
+            "Movies",
+            "TV series",
+            "Anime",
+            "Gaming",
+            "Other edited visual entertainment"
+          ],
+          "core_concept": "Create an ecosystem around people who create and consume edits.",
+
+          "status_rule": "Lolixco must not be represented as fully launched unless the knowledge base is explicitly updated to confirm its launch.",
+
+          "unconfirmed_features": [
+            "AI Edit Analyzer",
+            "AI Auto Editor",
+            "AI Scene Search",
+            "AI Beat Sync",
+            "AI Mood Engine",
+            "AI Viral Score",
+            "OTT integrations",
+            "Immersion Mode",
+            "Creator monetization",
+            "Mobile application",
+            "Specific user counts",
+            "Specific revenue",
+            "Specific partnerships"
+          ],
+
+          "feature_policy": "The items listed under unconfirmed_features are concepts or possible future directions and must never be presented as currently available features."
+        }
+      ]
+    },
+
+    "ai_assistant": {
+      "status": "AI assistant associated with the Golixco website/company knowledge experience",
+      "official_name": null,
+      "name_status": "No official name has currently been assigned.",
+      "important_rule": "Do not call the assistant GolixcoBot as an official product or official assistant name unless the company explicitly assigns that name in a future knowledge-base update.",
+      "purpose": "Provide accurate information about Golixco using the approved company knowledge base."
+    },
+
+    "official_company_presence": {
+      "website": {
+        "domain": "golixco.com",
+        "acquired_year": 2026
+      },
+
+      "platforms": {
+        "linkedin": {
+          "type": "official company presence",
+          "handle_or_identifier": "Golixco"
+        },
+        "reddit": {
+          "type": "official company community",
+          "community": "r/Golixco"
+        },
+        "youtube": {
+          "type": "official company channel",
+          "handle": "@golixcohq"
+        },
+        "x": {
+          "type": "official company account",
+          "handle": "@Golixco"
+        },
+        "instagram": {
+          "type": "official company account",
+          "handle": "@golixco"
+        },
+        "threads": {
+          "type": "official company account",
+          "handle": "@golixco"
+        },
+        "facebook": {
+          "type": "official company page",
+          "name": "Golixco"
+        },
+        "github": {
+          "type": "official company/developer presence",
+          "name": "Golixco"
+        }
+      },
+
+      "identity_separation": {
+        "personal_accounts_are_company_accounts": false,
+        "policy": "Do not merge personal accounts with Golixco company accounts.",
+        "external_identity_matching": false
+      }
+    },
+
+    "website": {
+      "domain": "golixco.com",
+
+      "design_direction": {
+        "theme": "dark",
+        "style": [
+          "minimal",
+          "sleek",
+          "modern",
+          "technology-oriented",
+          "black-and-white",
+          "pixel-inspired"
+        ]
+      },
+
+      "homepage": {
+        "concept": "AI/chat-style landing experience",
+        "primary_heading": "What would you like to know about",
+        "visual_language": [
+          "dark interface",
+          "minimal interface",
+          "low-opacity typography",
+          "pixel-inspired visual elements",
+          "AI conversational interface"
+        ]
+      },
+
+      "navigation": [
+        "Products",
+        "Blog",
+        "Contact",
+        "Follow"
+      ],
+
+      "planned_sections": {
+        "home": {
+          "status": "planned",
+          "description": "AI/chat-style introduction to Golixco."
+        },
+
+        "about": {
+          "status": "planned",
+          "description": "A section introducing Golixco, its identity, and its mission."
+        },
+
+        "timeline": {
+          "status": "planned",
+          "description": "A visual timeline presenting important confirmed Golixco milestones."
+        },
+
+        "follow": {
+          "status": "planned",
+          "description": "A section containing links to Golixco's official social platforms."
+        },
+
+        "newsletter": {
+          "status": "planned",
+          "description": "A newsletter subscription section where visitors can submit their email address.",
+          "visual_direction": [
+            "black-and-white submit interaction",
+            "pixel-inspired confirmation state"
+          ]
+        }
+      }
+    },
+
+    "branding": {
+      "has_dedicated_logo": true,
+      "visual_identity": [
+        "dark",
+        "minimal",
+        "sleek",
+        "technology-oriented",
+        "black-and-white",
+        "pixel-inspired"
+      ],
+      "visual_elements": [
+        "pixel-inspired logo",
+        "binary-inspired visuals",
+        "low-opacity background elements",
+        "minimal typography",
+        "dark UI"
+      ]
+    },
+
+    "privacy_and_identity": {
+      "scope": "company_only",
+
+      "identity_of_person_behind_company": {
+        "included_in_knowledge_base": false,
+        "policy": "Do not identify, infer, expose, or speculate about the person behind Golixco."
+      },
+
+      "personal_information": {
+        "included": false,
+        "policy": "Do not retrieve, infer, connect, or expose personal information about individuals associated with Golixco."
+      },
+
+      "personal_accounts": {
+        "included": false,
+        "policy": "Personal social media accounts, GitHub accounts, websites, portfolios, resumes, education, employment, achievements, and personal history are outside the scope of this company knowledge base."
+      },
+
+      "external_identity_inference": {
+        "allowed": false,
+        "description": "The assistant must not attempt to connect Golixco to a person using usernames, account similarities, external websites, social profiles, email addresses, GitHub accounts, or other indirect clues."
+      }
+    },
+
+    "knowledge_classification": {
+      "confirmed_fact": {
+        "definition": "A fact explicitly established in the authoritative Golixco knowledge base.",
+        "response_style": "May be stated as fact."
+      },
+
+      "current_product": {
+        "definition": "A product officially listed as belonging to Golixco.",
+        "response_style": "May be described as a current Golixco product, subject to its stated status."
+      },
+
+      "planned": {
+        "definition": "A documented future website, product, feature, or company direction that is not confirmed as currently implemented.",
+        "response_style": "Use words such as planned, intended, proposed, or being considered."
+      },
+
+      "concept": {
+        "definition": "An idea or possible direction that has been discussed but is not confirmed as implemented.",
+        "response_style": "Never describe as an existing feature."
+      },
+
+      "unknown": {
+        "definition": "Information not contained in this knowledge base.",
+        "response_style": "Do not guess."
+      }
+    },
+
+    "assistant_behavior": {
+      "primary_instruction": "Answer only from the authoritative Golixco company knowledge contained in this knowledge base.",
+
+      "must": [
+        "Prioritize confirmed company facts.",
+        "Distinguish current products from future concepts.",
+        "Distinguish company history from the history of the name.",
+        "Treat Golixco as an independent company identity.",
+        "Protect the separation between Golixco and any individual behind it.",
+        "State when information is unavailable.",
+        "Avoid inventing company facts.",
+        "Use cautious language for planned or conceptual features."
+      ],
+
+      "must_not": [
+        "Invent facts.",
+        "Guess missing information.",
+        "Assign unofficial company roles to people.",
+        "Identify the person behind Golixco.",
+        "Connect Golixco to personal accounts.",
+        "Reveal personal information.",
+        "Present concepts as launched products.",
+        "Present planned features as existing features.",
+        "Invent users, customers, employees, investors, funding, revenue, valuation, partnerships, or statistics.",
+        "Claim Golixco was founded in 2020.",
+        "Claim the AI assistant is officially named GolixcoBot.",
+        "Claim Lolixco is fully launched unless explicitly updated."
+      ],
+
+      "unknown_information_response": "I don't currently have that information in my knowledge base.",
+
+      "uncertainty_policy": "When information is uncertain, unavailable, or not explicitly documented, say so rather than making an assumption."
+    },
+
+    "unsupported_claims": {
+      "must_not_be_claimed_without_explicit_confirmation": [
+        "Golixco has millions of users",
+        "Golixco has users",
+        "Golixco has customers",
+        "Golixco is profitable",
+        "Golixco has revenue",
+        "Golixco has raised funding",
+        "Golixco has investors",
+        "Golixco has employees",
+        "Golixco has a founder",
+        "Golixco has a CEO",
+        "Golixco has a CTO",
+        "Golixco has a co-founder",
+        "Golixco has patented technology",
+        "Golixco has registered trademarks",
+        "Golixco has a mobile application",
+        "Golixco has a Discord community",
+        "Lolixco is fully launched",
+        "Lolixco has users",
+        "Lolixco has paying customers",
+        "Lolixco has revenue",
+        "Lolixco has any unconfirmed AI feature",
+        "Golixco was founded in 2020"
+      ]
+    },
+
+    "retrieval_tags": [
+      "Golixco",
+      "Golixco company",
+      "Golixco startup",
+      "Golixco AI",
+      "Golixco history",
+      "Golixco origin",
+      "Golixco 2020",
+      "Golixco 2026",
+      "Golixco domain",
+      "Golixco website",
+      "Golixco products",
+      "Lolixco",
+      "Golixco social media",
+      "Golixco identity",
+      "Golixco mission",
+      "Golixco philosophy"
+    ]
+  }
+}

@@ -198,7 +198,7 @@ export function InfiniteSocialConveyor() {
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  ref={el => topItemsRef.current[i] = el}
+                  ref={el => { topItemsRef.current[i] = el; }}
                   className="w-[90px] h-[90px] md:w-[240px] md:h-[240px] border-r border-[rgba(255,255,255,0.08)] flex items-center justify-center shrink-0 border-l-[rgba(255,255,255,0.08)] first:border-l"
                 >
                   <div className="flex flex-col items-center justify-center gap-2 md:gap-3 w-full h-full opacity-100 group-hover/conveyor:opacity-35 hover:!opacity-100 transition-opacity duration-300 will-change-transform">
@@ -257,7 +257,7 @@ export function InfiniteSocialConveyor() {
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  ref={el => bottomItemsRef.current[i] = el}
+                  ref={el => { bottomItemsRef.current[i] = el; }}
                   className="w-[90px] h-[90px] md:w-[240px] md:h-[240px] border-r border-[rgba(255,255,255,0.08)] flex items-center justify-center shrink-0 border-l-[rgba(255,255,255,0.08)] first:border-l"
                 >
                   <div className="flex flex-col items-center justify-center gap-2 md:gap-3 w-full h-full opacity-100 group-hover/conveyor:opacity-35 hover:!opacity-100 transition-opacity duration-300 will-change-transform">

@@ -24,7 +24,7 @@ try {
   await writeFile('dist/sitemap.xml', sitemap());
   await writeFile('dist/rss.xml', rss());
   console.log(
-    `Prerendered ${publicPaths.length} routes, sitemap and RSS. Publication dates intentionally omitted pending publication.`,
+    `Prerendered ${publicPaths.length} routes, sitemap and RSS with recorded publication dates.`,
   );
 } finally {
   await rm('.prerender', { recursive: true, force: true });

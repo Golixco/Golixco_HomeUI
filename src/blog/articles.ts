@@ -24,6 +24,7 @@ export const articles: Article[] = [
     cover: '/blog/golixco-cover.svg',
     coverAlt: 'Official Golixco emblem alongside an original monochrome grid of connected pixels.',
     modified: '2026-11-10',
+    published: '2026-11-10',
     sections: [
       {
         id: 'starting-point',
@@ -123,6 +124,7 @@ For company and business inquiries, write to [hello@golixco.com](mailto:hello@go
     coverAlt:
       'Official monochrome Lolixco L/play emblem beside the editorial title, Discover the edit. Explore the craft.',
     modified: '2026-11-10',
+    published: '2026-11-10',
     sections: [
       {
         id: 'introducing-lolixco',

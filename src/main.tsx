@@ -1,6 +1,8 @@
+import { startAnalytics } from './analytics';
 import { StrictMode } from 'react';
 import { hydrateRoot, createRoot } from 'react-dom/client';
 async function bootstrap() {
+  startAnalytics();
   const path = window.location.pathname;
   const { default: Component } = await (path.startsWith('/blog')
     ? import('./blog/BlogApp')

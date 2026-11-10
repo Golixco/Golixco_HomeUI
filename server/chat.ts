@@ -3,11 +3,13 @@ import {
   createBackboard,
   backboardConfigured,
   createFailover,
+  isQuotaError,
   type Provider,
 } from './providers.ts';
-import { createHash } from 'node:crypto';
-import { GoogleGenAI, ThinkingLevel } from '@google/genai';
-import { getLocalAnswer, systemInstruction, type ChatMessage } from './knowledge.ts';
+import { createHash, randomUUID } from 'node:crypto';
+import { createGemini } from './gemini.ts';
+export { checkedGeminiChunks } from './gemini.ts';
+import { getLocalAnswer, type ChatMessage } from './knowledge.ts';
 
 export const MAX_BODY_BYTES = 20_000;
 export const MAX_MESSAGE = 1200;
@@ -21,14 +23,30 @@ class RequestError extends Error {
   }
 }
 
-export function validatePayload(body: unknown): { message: string; history: ChatMessage[] } {
+export function validatePayload(body: unknown): {
+  message: string;
+  history: ChatMessage[];
+} {
   if (!body || typeof body !== 'object' || Array.isArray(body))
-    throw new RequestError(400, 'Send a message and optional conversation history.');
+    throw new RequestError(
+      400,
+      'Send a message and optional conversation history.',
+    );
   const { message, history = [] } = body as Record<string, unknown>;
-  if (typeof message !== 'string' || !message.trim() || message.length > MAX_MESSAGE)
-    throw new RequestError(400, `Messages must contain 1–${MAX_MESSAGE} characters.`);
+  if (
+    typeof message !== 'string' ||
+    !message.trim() ||
+    message.length > MAX_MESSAGE
+  )
+    throw new RequestError(
+      400,
+      `Messages must contain 1–${MAX_MESSAGE} characters.`,
+    );
   if (!Array.isArray(history) || history.length > 12)
-    throw new RequestError(400, 'Conversation history must contain at most 12 messages.');
+    throw new RequestError(
+      400,
+      'Conversation history must contain at most 12 messages.',
+    );
   let total = message.length;
   const validated = history.map((item) => {
     if (
@@ -58,10 +76,16 @@ export function createLimiter() {
     { minute: number; minuteCount: number; hour: number; hourCount: number }
   >();
   return (identity: string, now = Date.now()) => {
-    for (const [key, value] of clients) if (now - value.hour >= 3_600_000) clients.delete(key);
+    for (const [key, value] of clients)
+      if (now - value.hour >= 3_600_000) clients.delete(key);
     const key = createHash('sha256').update(identity).digest('hex');
     if (!clients.has(key) && clients.size >= 2000) return false;
-    const state = clients.get(key) ?? { minute: now, minuteCount: 0, hour: now, hourCount: 0 };
+    const state = clients.get(key) ?? {
+      minute: now,
+      minuteCount: 0,
+      hour: now,
+      hourCount: 0,
+    };
     if (now - state.minute >= 60_000) {
       state.minute = now;
       state.minuteCount = 0;
@@ -71,41 +95,7 @@ export function createLimiter() {
   };
 }
 
-export async function* geminiStream(message: string, history: ChatMessage[], signal: AbortSignal) {
-  const client = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY!,
-    httpOptions: { timeout: 30_000 },
-  });
-  const stream = await client.models.generateContentStream({
-    model: process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
-    contents: [
-      ...history.map((h) => ({
-        role: h.role === 'bot' ? 'model' : 'user',
-        parts: [{ text: h.text }],
-      })),
-      { role: 'user', parts: [{ text: message }] },
-    ],
-    config: {
-      systemInstruction,
-      temperature: 0.2,
-      maxOutputTokens: 2048,
-      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
-      abortSignal: signal,
-    },
-  });
-  yield* checkedGeminiChunks(stream);
-}
-export async function* checkedGeminiChunks(
-  stream: AsyncIterable<{ text?: string; candidates?: { finishReason?: string }[] }>,
-) {
-  let finishReason: string | undefined;
-  for await (const chunk of stream) {
-    for (const candidate of chunk.candidates ?? [])
-      if (candidate.finishReason) finishReason = candidate.finishReason;
-    if (chunk.text) yield chunk.text;
-  }
-  if (finishReason !== 'STOP') throw new Error('Provider response interrupted');
-}
+export const geminiStream = createGemini();
 
 export function createChatHandler(
   options: {
@@ -121,7 +111,8 @@ export function createChatHandler(
   let providerCalls = 0;
   const routedProvider = createFailover(
     options.provider ?? geminiStream,
-    options.fallbackProvider ?? (backboardConfigured() ? createBackboard() : undefined),
+    options.fallbackProvider ??
+      (backboardConfigured() ? createBackboard() : undefined),
     () => {
       const day = Math.floor(Date.now() / 86_400_000);
       if (day !== budgetDay) {
@@ -137,9 +128,43 @@ export function createChatHandler(
     },
   );
   return async (req: ChatRequest, res: ServerResponse) => {
+    const requestId = randomUUID();
+    res.setHeader('X-Request-ID', requestId);
+    const diagnose = (
+      category: string,
+      status: number,
+      providerStatus?: number,
+      finishReason?: string,
+    ) => {
+      // Fixed categories only: no URLs, bodies, IPs, provider errors or conversation text.
+      console.info(
+        JSON.stringify({
+          event: 'chat_request',
+          requestId,
+          category,
+          status,
+          ...(providerStatus && providerStatus >= 400 && providerStatus <= 599
+            ? { providerStatus }
+            : {}),
+          ...(finishReason &&
+          ['MAX_TOKENS', 'SAFETY', 'RECITATION', 'OTHER', 'UNKNOWN'].includes(
+            finishReason,
+          )
+            ? { finishReason }
+            : {}),
+        }),
+      );
+    };
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    const json = (status: number, error: string) => {
+    const json = (
+      status: number,
+      error: string,
+      category = status === 503
+        ? 'configuration_unavailable'
+        : 'request_rejected',
+    ) => {
+      diagnose(category, status);
       res.statusCode = status;
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({ error }));
@@ -149,26 +174,43 @@ export function createChatHandler(
       json(405, 'Method not allowed.');
       return;
     }
-    if (!req.headers['content-type']?.toLowerCase().startsWith('application/json')) {
+    if (
+      !req.headers['content-type']?.toLowerCase().startsWith('application/json')
+    ) {
       json(415, 'Use application/json.');
       return;
     }
     const origin = req.headers.origin;
-    const allowedOrigins = new Set(['https://golixco.com', 'https://www.golixco.com']);
-    if (process.env.VERCEL_URL) allowedOrigins.add(`https://${process.env.VERCEL_URL}`);
+    const allowedOrigins = new Set([
+      'https://golixco.com',
+      'https://www.golixco.com',
+    ]);
+    if (process.env.VERCEL_URL)
+      allowedOrigins.add(`https://${process.env.VERCEL_URL}`);
     if (process.env.NODE_ENV !== 'production')
       for (const host of ['localhost', '127.0.0.1'])
-        for (const port of ['3000', '3001', '4173']) allowedOrigins.add(`http://${host}:${port}`);
-    if ((origin && !allowedOrigins.has(origin)) || req.headers['sec-fetch-site'] === 'cross-site') {
+        for (const port of ['3000', '3001', '4173'])
+          allowedOrigins.add(`http://${host}:${port}`);
+    if (
+      (origin && !allowedOrigins.has(origin)) ||
+      req.headers['sec-fetch-site'] === 'cross-site'
+    ) {
       json(403, 'Please use the Golixco website to chat.');
       return;
     }
     const identity = process.env.VERCEL
-      ? String(req.headers['x-vercel-forwarded-for'] || req.socket.remoteAddress || 'unknown')
+      ? String(
+          req.headers['x-vercel-forwarded-for'] ||
+            req.socket.remoteAddress ||
+            'unknown',
+        )
       : req.socket.remoteAddress || 'local';
     if (!limited(identity)) {
       res.setHeader('Retry-After', '60');
-      json(429, 'You have sent several messages. Please wait a minute before trying again.');
+      json(
+        429,
+        'You have sent several messages. Please wait a minute before trying again.',
+      );
       return;
     }
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -180,7 +222,8 @@ export function createChatHandler(
     };
     res.on('close', disconnected);
     const event = (data: unknown) => {
-      if (!res.destroyed && !res.writableEnded) res.write(`data: ${JSON.stringify(data)}\n\n`);
+      if (!res.destroyed && !res.writableEnded)
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
     };
     try {
       if (Number(req.headers['content-length'] || 0) > MAX_BODY_BYTES)
@@ -196,7 +239,8 @@ export function createChatHandler(
         for await (const chunk of req) {
           const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
           bytes += buffer.length;
-          if (bytes > MAX_BODY_BYTES) throw new RequestError(413, 'Request is too large.');
+          if (bytes > MAX_BODY_BYTES)
+            throw new RequestError(413, 'Request is too large.');
           chunks.push(buffer);
         }
         req.setTimeout(0);
@@ -205,7 +249,9 @@ export function createChatHandler(
         } catch {
           throw new RequestError(400, 'The request must contain valid JSON.');
         }
-      } else if (Buffer.byteLength(JSON.stringify(body), 'utf8') > MAX_BODY_BYTES)
+      } else if (
+        Buffer.byteLength(JSON.stringify(body), 'utf8') > MAX_BODY_BYTES
+      )
         throw new RequestError(413, 'Request is too large.');
       const { message, history } = validatePayload(body);
       const localAnswer = getLocalAnswer(message, history);
@@ -224,7 +270,10 @@ export function createChatHandler(
         }
         if (active >= 4 || providerCalls >= 200) {
           res.setHeader('Retry-After', '60');
-          json(429, 'The assistant is busy. Please try again later or contact hello@golixco.com.');
+          json(
+            429,
+            'The assistant is busy. Please try again later or contact hello@golixco.com.',
+          );
           return;
         }
         active++;
@@ -242,7 +291,12 @@ export function createChatHandler(
         const timeout = new Promise<never>((_, reject) => {
           timer = setTimeout(() => {
             controller.abort();
-            reject(new RequestError(504, 'The response took too long. Please try again.'));
+            reject(
+              new RequestError(
+                504,
+                'The response took too long. Please try again.',
+              ),
+            );
           }, options.timeoutMs ?? 30_000);
         });
         heartbeat = setInterval(() => {
@@ -250,7 +304,11 @@ export function createChatHandler(
         }, 5000);
         let chars = 0;
         const consume = async () => {
-          for await (const text of routedProvider(message, history, controller.signal)) {
+          for await (const text of routedProvider(
+            message,
+            history,
+            controller.signal,
+          )) {
             if (controller.signal.aborted || res.destroyed) break;
             chars += text.length;
             if (chars > 12_000) {
@@ -259,17 +317,25 @@ export function createChatHandler(
             }
             event({ type: 'delta', text });
           }
-          if (!chars && !controller.signal.aborted) throw new Error('Empty response');
+          if (!chars && !controller.signal.aborted)
+            throw new Error('Empty response');
         };
         await Promise.race([consume(), timeout]);
       }
-      if (!controller.signal.aborted) event({ type: 'done' });
+      if (!controller.signal.aborted) {
+        event({ type: 'done' });
+        diagnose(localAnswer ? 'curated_complete' : 'model_complete', 200);
+      } else diagnose('cancelled', 499);
       res.end();
     } catch (error: unknown) {
       if (res.destroyed || res.writableEnded) return;
       const providerStatus = Number((error as { status?: number })?.status);
       const status =
-        error instanceof RequestError ? error.status : providerStatus === 429 ? 429 : 502;
+        error instanceof RequestError
+          ? error.status
+          : isQuotaError(error)
+            ? 429
+            : 502;
       const message =
         error instanceof RequestError
           ? error.message
@@ -277,12 +343,37 @@ export function createChatHandler(
             ? 'The assistant has reached its provider quota. Please try again later.'
             : 'The assistant is temporarily unavailable. Please try again or contact hello@golixco.com.';
       // Never log provider bodies, prompts, keys, history, or private configuration.
+      const category =
+        status === 504
+          ? 'timeout'
+          : status === 429
+            ? 'quota_or_limit'
+            : error instanceof RequestError
+              ? 'invalid_request'
+              : providerStatus === 401 || providerStatus === 403
+                ? 'provider_access'
+                : providerStatus === 404
+                  ? 'provider_model_unavailable'
+                  : providerStatus === 400
+                    ? 'provider_request_rejected'
+                    : error instanceof TypeError
+                      ? 'provider_network'
+                      : error instanceof Error &&
+                          error.message === 'Provider response interrupted'
+                        ? 'provider_interrupted'
+                        : 'provider_failure';
       if (res.headersSent) {
+        diagnose(
+          category,
+          status,
+          providerStatus,
+          (error as { finishReason?: string })?.finishReason,
+        );
         event({ type: 'error', error: message });
         res.end();
       } else {
         if (status === 429) res.setHeader('Retry-After', '60');
-        json(status, message);
+        json(status, message, category);
       }
     } finally {
       if (timer) clearTimeout(timer);

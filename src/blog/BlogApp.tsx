@@ -4,7 +4,13 @@ import { ArrowLeft, ArrowUpRight, ArrowRight } from 'lucide-react';
 import { NotFound } from '../components/NotFound';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
-import { articles, articlePath, canonical, readingTime, type Article } from './articles';
+import {
+  articles,
+  articlePath,
+  canonical,
+  readingTime,
+  type Article,
+} from './articles';
 import { SummaryWidget } from './SummaryWidget';
 
 function Toc({ article, active }: { article: Article; active: string }) {
@@ -102,7 +108,19 @@ function ArticlePage({ article }: { article: Article }) {
               {article.modified.split('-').reverse().join(' / ')}
             </span>
           </div>
-          <p className="editorial-note">Publication date pending · Prepared for the Golixco Blog</p>
+          <p className="editorial-note">
+            {article.published ? (
+              <>
+                Published{' '}
+                <time dateTime={article.published}>
+                  {article.published.split('-').reverse().join(' / ')}
+                </time>{' '}
+                · Golixco editorial
+              </>
+            ) : (
+              'Publication date pending · Prepared for the Golixco Blog'
+            )}
+          </p>
           <img
             className="article-cover"
             src={article.cover}
@@ -128,8 +146,14 @@ function ArticlePage({ article }: { article: Article }) {
                     a: ({ href, children }) => (
                       <a
                         href={href}
-                        target={href?.startsWith('https:') ? '_blank' : undefined}
-                        rel={href?.startsWith('https:') ? 'noopener noreferrer' : undefined}
+                        target={
+                          href?.startsWith('https:') ? '_blank' : undefined
+                        }
+                        rel={
+                          href?.startsWith('https:')
+                            ? 'noopener noreferrer'
+                            : undefined
+                        }
                       >
                         {children}
                       </a>

@@ -56,7 +56,7 @@ The supplied `Golixco_favi.svg` and RGB 1254×1254 PNG are opaque, including the
 
 The supplied favicon ZIP was extracted using a filename allowlist and size/path checks. ICO, 16/32px PNGs, 180px Apple touch icon and 192/512px Android icons are installed; the manifest identifies Golixco. The obsolete logo is removed.
 
-Navigation now links to Lolixco, About, contacts and socials. Menus support keyboard activation, Escape and outside-click dismissal without locking scrolling. Timeline content distinguishes name history from company milestones. The scroll-driven social conveyor design is retained; it rests when scrolling stops, honors reduced motion, and has an accessible complete link list. Newsletter spacing and chat layout support 320px screens. Focus indicators and a skip link are provided.
+Navigation now links to Lolixco, About, contacts and socials. Menus support keyboard activation, Escape and outside-click dismissal without locking scrolling. Timeline content distinguishes name history from company milestones. The scroll-driven social conveyor design is retained; it rests when scrolling stops, honors reduced motion, and has an accessible complete link list. Newsletter spacing and chat layout support 320px screens. Focus indicators and a skip link are provided. Small licensed local Noto font subsets render the rotating Devanagari, Japanese and Arabic names on systems without those fonts.
 
 **Newsletter storage is intentionally pending.** The unavailable signup UI collects nothing and never claims success. Database selection, consent, privacy language and subscription storage belong to the next mission. No newsletter address or sending service was created.
 

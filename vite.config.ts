@@ -1,42 +1,48 @@
-import 'dotenv/config';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
-import {defineConfig, Plugin} from 'vite';
+import path from 'node:path';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 
 function apiChatPlugin(): Plugin {
   return {
-    name: 'api-chat-dev-server',
+    name: 'golixco-local-api',
     configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        if (req.url === '/api/chat' && req.method === 'POST') {
-          let body = '';
-          req.on('data', chunk => {
-            body += chunk;
-          });
-          req.on('end', async () => {
-            try {
-              const parsedBody = body ? JSON.parse(body) : {};
-              const vercelReq = Object.assign(req, { body: parsedBody });
-              const vercelRes = Object.assign(res, {
-                status(code: number) {
-                  this.statusCode = code;
-                  return this;
-                },
-                json(data: any) {
-                  this.setHeader('Content-Type', 'application/json');
-                  this.end(JSON.stringify(data));
-                },
-              });
-              const { default: handler } = await import('./api/chat.ts');
-              await handler(vercelReq as any, vercelRes as any);
-            } catch (err: any) {
-              console.error('Error handling /api/chat:', err);
+      server.middlewares.use(async (req, res, next) => {
+        const pathname = req.url?.split('?')[0];
+        if (pathname === '/api/chat') {
+          try {
+            const { default: handler } = await server.ssrLoadModule('/api/chat.ts');
+            await handler(req, res);
+          } catch {
+            if (!res.headersSent) {
               res.statusCode = 500;
               res.setHeader('Content-Type', 'application/json');
-              res.end(JSON.stringify({ error: err.message || 'Internal server error' }));
             }
-          });
+            if (!res.writableEnded)
+              res.end(JSON.stringify({ error: 'The assistant is temporarily unavailable.' }));
+          }
+          return;
+        }
+        if (
+          pathname?.startsWith('/api/') ||
+          pathname?.startsWith('/server/') ||
+          pathname === '/api/knowledge.json'
+        ) {
+          res.statusCode = 404;
+          res.end('Not found');
+          return;
+        }
+        // Match production's true HTTP 404 for unknown document routes.
+        if (
+          req.headers.accept?.includes('text/html') &&
+          pathname !== '/' &&
+          !pathname?.includes('.')
+        ) {
+          const fs = await import('node:fs/promises');
+          const html = await fs.readFile(path.resolve('index.html'), 'utf8');
+          res.statusCode = 404;
+          res.setHeader('Content-Type', 'text/html');
+          res.end(await server.transformIndexHtml(req.url!, html));
           return;
         }
         next();
@@ -45,20 +51,20 @@ function apiChatPlugin(): Plugin {
   };
 }
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  // Only backend configuration goes into the Node process. Never use Vite define.
+  for (const key of ['GEMINI_API_KEY', 'GEMINI_MODEL'])
+    if (!process.env[key] && env[key]) process.env[key] = env[key];
   return {
     plugins: [react(), tailwindcss(), apiChatPlugin()],
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, '.'),
-      },
-    },
+    resolve: { alias: { '@': path.resolve(import.meta.dirname, '.') } },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâ€”file watching is disabled to prevent flickering during agent edits.
-      hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      host: '0.0.0.0',
+      port: 3000,
+      strictPort: true,
+      fs: { deny: ['.env', '.env.*', '**/.git/**', '**/server/**', '**/api/**'] },
     },
+    build: { sourcemap: false },
   };
 });

@@ -18,7 +18,7 @@ export function pageDocument(template: string, path: string, html: string) {
       ? 'Company perspectives and product stories from Golixco. Explore the thinking behind Golixco and the live Lolixco public beta.'
       : 'Golixco builds useful software and products with artificial intelligence, creativity and experimentation. Explore Lolixco, our live public-beta product.');
   const image = canonical(
-    article ? `/blog/${article.slug}-social.png` : '/brand/golixco-wordmark.png',
+    article ? `/blog/${article.slug}-social.png` : '/og-image.png',
   );
   const org = {
     '@type': 'Organization',
@@ -69,7 +69,7 @@ export function pageDocument(template: string, path: string, html: string) {
       inLanguage: 'en',
     });
   const head = `<title>${escape(title)}</title><meta name="description" content="${escape(description)}"><meta name="robots" content="${exists ? 'index,follow' : 'noindex,nofollow'}">${exists ? `<link rel="canonical" href="${canonical(path)}">` : ''}
- <meta property="og:site_name" content="Golixco"><meta property="og:type" content="${article ? 'article' : 'website'}"><meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}"><meta property="og:url" content="${canonical(path)}"><meta property="og:image" content="${image}"><meta property="og:image:width" content="${article ? 1200 : 1672}"><meta property="og:image:height" content="${article ? 630 : 941}"><meta property="og:image:alt" content="${escape(article?.coverAlt ?? 'Official Golixco emblem and wordmark')}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escape(title)}"><meta name="twitter:description" content="${escape(description)}"><meta name="twitter:image" content="${image}"><link rel="alternate" type="application/rss+xml" title="Golixco | Blog" href="/rss.xml">${exists ? `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c')}</script>` : ''}`;
+ <meta property="og:site_name" content="Golixco"><meta property="og:type" content="${article ? 'article' : 'website'}"><meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}"><meta property="og:url" content="${canonical(path)}"><meta property="og:image" content="${image}"><meta property="og:image:width" content="${article ? 1200 : 1672}"><meta property="og:image:height" content="${article ? 630 : 941}"><meta property="og:image:alt" content="${escape(article?.coverAlt ?? 'Golixco — monochrome interface banner with layered panels and golixco.com')}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escape(title)}"><meta name="twitter:description" content="${escape(description)}"><meta name="twitter:image" content="${image}"><link rel="alternate" type="application/rss+xml" title="Golixco | Blog" href="/rss.xml">${exists ? `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c')}</script>` : ''}`;
   return template
     .replace(/<title>[\s\S]*?<\/title>/g, '')
     .replace(

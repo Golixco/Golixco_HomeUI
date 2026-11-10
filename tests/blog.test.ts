@@ -15,7 +15,7 @@ test('articles are substantial, distinct and maintain stable anchors', () => {
     assert.ok(readingTime(a) >= 5);
     assert.equal(new Set(a.sections.map((s) => s.id)).size, a.sections.length);
     assert.ok(a.sections.some((s) => /interface/.test(s.id)));
-    assert.equal(a.published, undefined);
+    assert.equal(a.published, '2026-11-10');
   }
   assert.ok(articles[0].sections.some((s) => s.id === 'starting-point'));
   assert.ok(articles[1].sections.some((s) => s.id === 'edits'));
@@ -35,7 +35,7 @@ test('route documents have unique canonical, text-safe metadata and truthful JSO
     assert.ok(graph.some((x: { '@type': string }) => x['@type'] === 'Organization'));
     if (path.startsWith('/blog/')) {
       const post = graph.find((x: { '@type': string }) => x['@type'] === 'BlogPosting');
-      assert.equal(post.datePublished, undefined);
+      assert.equal(post.datePublished, '2026-11-10');
       assert.equal(post.url, canonical(path));
     }
     assert.doesNotMatch(html, /localhost|127\.0\.0\.1/);

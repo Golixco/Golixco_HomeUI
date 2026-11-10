@@ -4,11 +4,26 @@ import { RevealContainer, RevealItem } from './ScrollReveal';
 import { motion, AnimatePresence } from 'motion/react';
 
 const timelineData = [
-  { year: '2020', title: 'The name "Golixco" was found', subtitle: '' },
-  { year: '2021', title: 'Exploring the Possibilities', subtitle: '(Figuring Things Out)' },
-  { year: '2023', title: 'Shaping the Vision', subtitle: '(Still Figuring Things Out)' },
-  { year: '2024', title: 'Turning Ideas Into Direction', subtitle: '(“What If?” Into “Let’s Do It”)' },
-  { year: '2026', title: 'Golixco.com — Official Launch', subtitle: '' }
+  {
+    year: '2020',
+    title: 'A name takes shape',
+    subtitle: 'An online identity and gaming handle — before the company.',
+  },
+  {
+    year: 'Later',
+    title: 'The name becomes an idea',
+    subtitle: 'Curiosity, creativity and software begin to come together.',
+  },
+  {
+    year: '2026',
+    title: 'A direction for Golixco',
+    subtitle: 'An AI-focused company concept, and the Golixco.com domain.',
+  },
+  {
+    year: 'Now',
+    title: 'Lolixco is live',
+    subtitle: 'Our cinematic edit-discovery platform is in public beta.',
+  },
 ];
 
 export function HistoryTimeline() {
@@ -21,7 +36,9 @@ export function HistoryTimeline() {
     <section className="py-16 md:py-24 px-8 max-w-[1440px] mx-auto flex flex-col items-center">
       <RevealContainer className="w-full flex flex-col items-center">
         <RevealItem className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight text-white">Our history</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight text-white">
+            Our history
+          </h2>
           <p className="text-white/70 max-w-xl mx-auto text-lg leading-relaxed">
             Take a look at where we started and how far we've come.
           </p>
@@ -32,6 +49,7 @@ export function HistoryTimeline() {
             {timelineData.map((item, index) => (
               <button
                 key={item.year}
+                aria-pressed={activeIndex === index}
                 onClick={() => setActiveIndex(index)}
                 className={`relative z-10 flex-1 py-2.5 md:py-3 text-center text-[11px] sm:text-xs md:text-sm font-medium transition-colors duration-300 ${
                   activeIndex === index ? 'text-black' : 'text-white/70 hover:text-white'
@@ -73,6 +91,7 @@ export function HistoryTimeline() {
 
           <div className="flex justify-center gap-4 mt-12">
             <button
+              aria-label="Previous milestone"
               onClick={handlePrev}
               disabled={activeIndex === 0}
               className="p-3 rounded-full border border-white/20 hover:border-white/50 hover:scale-105 transition-all duration-300 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:border-white/20"
@@ -80,6 +99,7 @@ export function HistoryTimeline() {
               <ChevronLeft className="w-5 h-5 text-white" />
             </button>
             <button
+              aria-label="Next milestone"
               onClick={handleNext}
               disabled={activeIndex === timelineData.length - 1}
               className="p-3 rounded-full border border-white/20 hover:border-white/50 hover:scale-105 transition-all duration-300 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:border-white/20"

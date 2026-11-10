@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 
 export function AboutSection() {
   return (
-    <section className="relative overflow-hidden py-16 md:py-24 px-4 md:px-8 max-w-[1440px] mx-auto flex items-center">
+    <section id="about" className="relative overflow-hidden py-16 md:py-24 px-4 md:px-8 max-w-[1440px] mx-auto flex items-center">
       <div className="w-full max-w-2xl z-10">
         <RevealContainer>
           <RevealItem className="mb-12 md:mb-16">

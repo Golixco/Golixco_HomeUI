@@ -1,3 +1,5 @@
+<p align="center"><img src="public/brand/golixco-mark.svg" alt="Official Golixco G emblem" width="96" height="104"></p>
+
 # Golixco
 
 Mission 02 adds the prerendered [Golixco Blog](https://golixco.com/blog), expanded brand animation and quota-only Gemini → Backboard failover. See [the current architecture, model/storage decisions, summary-link limitations and SEO checklist](docs/mission-02.md). This remains local preparation; nothing has been deployed.
@@ -28,7 +30,18 @@ GEMINI_MODEL=gemini-3.5-flash-lite
 
 Paste the real key into ignored `.env.local`, then restart Vite. Do not use a `VITE_` key, commit credentials, or put them in a screenshot. Vite loads local server configuration without exposing it to browser code. `npm run preview` serves the built frontend **only**; it does not run the API.
 
-The default [Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite) model was checked against Google’s published model documentation on 2026-11-10. Account access and actual provider quality/latency still need a real-key smoke test; model availability can change. `GEMINI_MODEL` is a server-side override. Real Gemini checks are recorded in the Mission 02 verification report; Backboard requires separate credentials, catalog selection and storage approval.
+The default [Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite) model was checked against Google’s published model documentation on 2026-11-10. Account access and actual provider quality/latency still need a real-key smoke test; model availability can change. `GEMINI_MODEL` is a server-side override. Real Gemini checks are recorded in the Mission 02 verification report; The local candidate is openrouter / google/gemma-3-27b-it; authenticated catalog/pricing verification and the Backboard key remain pending. Temporary storage has been explicitly approved locally; .env.example keeps its safe false default.
+
+## Backboard candidate configuration
+
+```env
+BACKBOARD_API_KEY=
+BACKBOARD_LLM_PROVIDER=openrouter
+BACKBOARD_MODEL=google/gemma-3-27b-it
+BACKBOARD_STORAGE_APPROVED=false
+```
+
+The owner has explicitly opted the private local file into temporary provider storage. The safe example remains false. Add the key privately, run `node scripts/backboard-catalog.mjs`, and review the exact model, prices, context and streaming compatibility. A supported 12B alternative is reported when present, never auto-selected. Temporary thread/assistant deletion is best-effort, not a zero-retention guarantee. See [final refinements and minimal live verification](docs/final-refinements.md).
 
 ## Assistant architecture
 
@@ -37,7 +50,7 @@ The default [Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models
 - `server/knowledge.ts` supplies curated FAQ answers and company-only provider instructions. Curated answers are facts, not simulated Gemini output. Longer comparisons and detailed questions use the provider.
 - `shared/official.ts` is the single source for approved social URLs, product routes and contacts. The UI and assistant use those exact links. See [social audit](docs/social-audit.md) for verification limits.
 - The backend sends SSE `start`, `delta`, `done`, and `error` events. Provider text is forwarded as it arrives; curated answers arrive in one immediate delta. The client supports Stop, New chat, partial errors, a 40-second connection deadline and scrolling confined to the conversation. Provider cancellation stops local delivery; Google may still charge for work already started.
-- No chat transcript is persisted in a local application database. Gemini requests go to Google. The optional Backboard adapter creates temporary provider-side conversation state, with best-effort deletion, and is disabled until the owner approves that storage behavior. The browser sends at most eight recent usable turns, reduced to fit the context budget. Relevant user input is sent to Gemini for detailed conversation. Errors and cancelled assistant messages are excluded from subsequent provider history.
+- No chat transcript is persisted in a local application database. Gemini requests go to Google. The optional Backboard adapter creates temporary provider-side conversation state, with best-effort deletion, and is locally opted in by the owner, but inactive until the Backboard key is supplied and catalog verification passes. The browser sends at most eight recent usable turns, reduced to fit the context budget. Relevant user input is sent to Gemini for detailed conversation. Errors and cancelled assistant messages are excluded from subsequent provider history.
 - React Markdown skips raw HTML, suppresses images, and allows only exact approved HTTPS/mailto destinations. Markdown loads on demand to reduce initial JavaScript.
 
 The knowledge covers Lolixco’s live public beta; Home, Explore, Search, Shorts, Shuffle, Edit of the Moment, Immersion and Creator Studio; its **57-edit initial catalog (27 YouTube + 30 hosted)**; and all six experimental analysis dimensions. The launch count is not represented as a real-time statistic. Leadership identities remain private. 2020 is the origin of a name, not a formal company founding date.

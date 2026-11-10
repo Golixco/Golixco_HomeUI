@@ -1,6 +1,6 @@
 import { RevealContainer, RevealItem } from './ScrollReveal';
 import { contacts, socials } from '../../shared/official';
-export function Footer() {
+export function Footer({ showRss = false }: { showRss?: boolean }) {
   return (
     <footer className="border-t border-white/[0.06] py-10 px-4 md:px-8 bg-black pb-[calc(2rem+env(safe-area-inset-bottom))]">
       <RevealContainer viewportMargin="0px" className="max-w-[1440px] mx-auto flex flex-col gap-8">
@@ -9,8 +9,8 @@ export function Footer() {
             <img
               src="/brand/golixco-mark.svg"
               alt=""
-              width="28"
-              height="32"
+              width="36"
+              height="40"
               className="w-9 h-10 opacity-50 hover:opacity-80 transition-opacity"
             />
           </a>
@@ -18,9 +18,11 @@ export function Footer() {
             <a href="/blog" className="text-xs text-white/55 hover:text-white py-2">
               Blog
             </a>
-            <a href="/rss.xml" className="text-xs text-white/55 hover:text-white py-2">
-              RSS
-            </a>
+            {showRss && (
+              <a href="/rss.xml" className="text-xs text-white/45 hover:text-white py-2">
+                RSS
+              </a>
+            )}
             {socials
               .filter((s) =>
                 ['X', 'LinkedIn', 'Instagram', 'Discord', 'GitHub', 'Reddit'].includes(s.name),

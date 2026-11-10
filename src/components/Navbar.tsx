@@ -146,16 +146,16 @@ export function Navbar() {
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden border-t border-white/10 overflow-hidden"
           >
-            <div className="flex flex-col px-6 py-6 gap-3 max-h-[calc(100dvh-4rem)] overflow-y-auto">
+            <div className="flex flex-col px-6 py-6 gap-3 max-h-[calc(100dvh-4rem-env(safe-area-inset-top))] overflow-y-auto overscroll-contain">
               {products}
               <a href="/blog" onClick={close} className="py-3">
                 Blog
               </a>
               <a href="/#about" onClick={close} className="py-3">
-                About Golixco
+                About
               </a>
               <a href="/#stay-in-touch" onClick={close} className="py-3">
-                Follow Golixco
+                Follow
               </a>
               <div className="border-t border-white/10 mt-3 pt-3">{contactItems}</div>
             </div>

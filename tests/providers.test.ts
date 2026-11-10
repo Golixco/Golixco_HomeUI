@@ -142,13 +142,18 @@ test('Backboard transport uses knowledge, memory off, stream and deletes one-use
   const mock: typeof fetch = async (input, init) => {
     const url = String(input);
     seen.push({ url, init });
-    if (url.includes('/models/'))
+    if (url.includes('/models?'))
       return Response.json({
-        provider: 'test',
-        model_type: 'llm',
-        input_cost_per_1m_tokens: 0.1,
-        output_cost_per_1m_tokens: 0.2,
-        context_limit: 16000,
+        models: [
+          {
+            name: 'synthetic-small',
+            provider: 'test',
+            model_type: 'llm',
+            input_cost_per_1m_tokens: 0.1,
+            output_cost_per_1m_tokens: 0.2,
+            context_limit: 16000,
+          },
+        ],
       });
     if (init?.method === 'DELETE') return Response.json({ deleted: true });
     const event = (data: unknown) => `data: ${JSON.stringify(data)}\n\n`;

@@ -119,9 +119,9 @@ For company and business inquiries, write to [hello@golixco.com](mailto:hello@go
     title: 'Introducing Lolixco. Discover the edit. Explore the craft.',
     description:
       'A complete introduction to the live beta: cinematic discovery, the viewing interface, Creator Studio, and the creative choices behind the experience.',
-    cover: '/blog/lolixco-cover.svg',
+    cover: '/blog/lolixco-cover.png',
     coverAlt:
-      'Original monochrome editorial graphic of video frames, a play symbol and six analysis signals.',
+      'Official monochrome Lolixco L/play emblem beside the editorial title, Discover the edit. Explore the craft.',
     modified: '2026-11-10',
     sections: [
       {

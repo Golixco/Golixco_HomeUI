@@ -1,3 +1,4 @@
+import { readProviderCatalog } from './backboard-catalog.ts';
 import { systemInstruction, type ChatMessage } from './knowledge.ts';
 export type Provider = (
   message: string,
@@ -77,15 +78,18 @@ export function createBackboard(fetcher: typeof fetch = fetch): Provider {
     };
     try {
       // Fail closed unless the selected model has known economical pricing and adequate context.
-      const catalog = await fetcher(
-        `${BASE}/models/${encodeURIComponent(process.env.BACKBOARD_MODEL!)}`,
-        { headers, signal },
+      const catalog = await readProviderCatalog(
+        process.env.BACKBOARD_LLM_PROVIDER!,
+        headers,
+        signal,
+        fetcher,
       );
-      if (!catalog.ok) throw new Error('Model verification unavailable');
-      const model = await catalog.json();
+      const model = catalog.find((m) => m.name === process.env.BACKBOARD_MODEL);
+      if (!model) throw new Error('Selected model is unavailable in the account catalog');
       if (
         model.provider !== process.env.BACKBOARD_LLM_PROVIDER ||
         model.model_type !== 'llm' ||
+        model.supports_streaming === false ||
         typeof model.input_cost_per_1m_tokens !== 'number' ||
         typeof model.output_cost_per_1m_tokens !== 'number' ||
         !Number.isFinite(model.input_cost_per_1m_tokens) ||
@@ -94,6 +98,7 @@ export function createBackboard(fetcher: typeof fetch = fetch): Provider {
         model.output_cost_per_1m_tokens < 0 ||
         model.input_cost_per_1m_tokens > 0.5 ||
         model.output_cost_per_1m_tokens > 1 ||
+        !Number.isFinite(model.context_limit) ||
         model.context_limit < 8192
       )
         throw new Error('Model outside approved cost/context bounds');

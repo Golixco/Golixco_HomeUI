@@ -1,6 +1,5 @@
 import { StrictMode } from 'react';
 import { hydrateRoot, createRoot } from 'react-dom/client';
-import './index.css';
 async function bootstrap() {
   const path = window.location.pathname;
   const { default: Component } = await (path.startsWith('/blog')

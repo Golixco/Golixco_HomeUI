@@ -75,7 +75,7 @@ export function getLocalAnswer(message: string, history: ChatMessage[] = []): st
     return `For general company or business enquiries, email ${email(contacts.general)}. For Lolixco help, use ${email(contacts.support)}; for content rights, use ${email(contacts.rights)}.`;
   }
   if (/\b(blog|articles?)\b/.test(text))
-    return `Read [The Golixco Blog](${blogLinks.index}): [the company introduction](${blogLinks.company}) covers the ideas, identity and interface; [Introducing Lolixco](${blogLinks.product}) covers the live beta, UI, features and limitations.`;
+    return `Read [Golixco | Blog](${blogLinks.index}): [the company introduction](${blogLinks.company}) covers the ideas, identity and interface; [Introducing Lolixco](${blogLinks.product}) covers the live beta, UI, features and limitations.`;
   if (/youtube/.test(text) && /channel|social|follow|your youtube/.test(text))
     return "An active official Golixco YouTube channel hasn't been verified. You can find our confirmed destinations in the social section below.";
   if (/slack|substack/.test(text))

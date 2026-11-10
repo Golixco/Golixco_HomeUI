@@ -157,7 +157,7 @@ function ArticlePage({ article }: { article: Article }) {
           <p className="eyebrow">On this page</p>
           <Toc article={article} active={active} />
           <a className="toc-home" href="/blog">
-            The Golixco Blog <ArrowUpRight size={13} />
+            Golixco | Blog <ArrowUpRight size={13} />
           </a>
         </aside>
       </div>
@@ -169,9 +169,7 @@ function BlogIndex() {
     <main id="main-content" className="blog-index editorial-shell">
       <header>
         <p className="eyebrow">Ideas / Products / Perspectives</p>
-        <h1>
-          The Golixco Blog<span className="pixel-period">.</span>
-        </h1>
+        <h1>Blogs</h1>
         <p>
           The thinking behind what we build.
           <br />
@@ -216,9 +214,6 @@ function BlogIndex() {
         <a href="/#about">
           Meet Golixco <ArrowUpRight size={16} />
         </a>
-        <a href="/rss.xml">
-          Follow via RSS <ArrowUpRight size={16} />
-        </a>
       </div>
     </main>
   );
@@ -233,7 +228,7 @@ export default function BlogApp({ path }: { path: string }) {
       </a>
       <Navbar />
       {article ? <ArticlePage article={article} /> : <BlogIndex />}
-      <Footer />
+      <Footer showRss />
     </div>
   );
 }

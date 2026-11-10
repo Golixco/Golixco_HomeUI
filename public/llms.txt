@@ -35,7 +35,7 @@ Bluesky: https://bsky.app/profile/golixco.com
 Newsletter signup is coming soon; the homepage does not save email subscriptions.
 Future products, native mobile apps, accounts, memberships and monetization are not confirmed live.
 
-## The Golixco Blog
+## Golixco | Blog
 https://golixco.com/blog
 https://golixco.com/blog/the-golixco-blog — Company ideology, history, identity, interface and product-building approach.
 https://golixco.com/blog/the-lol-product-lolixco — Lolixco public-beta discovery, viewing UI, Creator Studio, six dimensions and limitations.

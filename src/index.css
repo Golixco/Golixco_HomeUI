@@ -1,5 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 @import 'tailwindcss';
+@font-face {
+  font-family: 'VT323';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/vt323-binary.ttf) format('truetype');
+}
+
 
 /* Official Noto font subsets for the rotating company name; licenses in public/fonts. */
 @font-face {

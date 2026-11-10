@@ -11,7 +11,7 @@ Only destinations already in the homepage or existing company knowledge were che
 | Telegram | https://t.me/GolixcoAI | 200, page identifies the intended handle; retained. |
 | Discord | https://discord.gg/RcsYSqh7bK | Official public invite API resolves to the Golixco server, with no expiry reported; retained. |
 | GitHub | https://github.com/GolixcoAI | GitHub organization API confirms this organization; retained existing developer destination. The source repository remains Golixco/Golixco_HomeUI; do not infer personal identities from it. |
-| Facebook | https://www.facebook.com/Golixco | 200, generic Facebook content limits independent verification; retained existing page ID. |
+| Facebook | https://www.facebook.com/Golixco | Mission 02 owner-specified destination correction; do not infer ownership from the former profile ID. Login-walled profile verification remains limited. |
 | Threads | https://www.threads.com/@golixco | 200, client/login rendering limits independent verification; retained existing handle. |
 | DEV | https://dev.to/golixco | 200, page title identifies Golixco; retained. |
 | Bluesky | https://bsky.app/profile/golixco.com | Public profile API resolves `golixco.com` with display name Golixco; retained. |

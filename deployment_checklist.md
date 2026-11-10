@@ -43,3 +43,9 @@ This mission is local-only. **Do not deploy, merge, purchase a plan or change DN
 ## Next mission — intentionally pending
 
 Newsletter database selection, consent/privacy text, subscription persistence, unsubscribe/send behavior and any new social animation requirements. Do not create `newsletter@golixco.com` now. Do not represent currently disabled newsletter signup as a subscription.
+
+## Mission 02 additions
+
+Prerendered blog index and two original articles, complete route metadata/JSON-LD, stable section IDs, responsive TOC, four external summary choices with manual clipboard fallback, RSS/sitemap, and original social covers are implemented. See `docs/mission-02.md` for architecture, source files, provider limits and the full owner checklist.
+
+Before launch: approve publication dates, review external summary behavior and Search Console/Rich Results after public authorization, finish real Gemini reliability/scope acceptance, and configure Backboard only after authenticated model/cost verification and explicit approval of provider-side state retention. No Backboard model default is selected. The per-request $0.0023 illustration is a token-price ceiling for the stated representative input/output, not a guaranteed bill or quote.

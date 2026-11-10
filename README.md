@@ -1,5 +1,7 @@
 # Golixco
 
+Mission 02 adds the prerendered [Golixco Blog](https://golixco.com/blog), expanded brand animation and quota-only Gemini → Backboard failover. See [the current architecture, model/storage decisions, summary-link limitations and SEO checklist](docs/mission-02.md). This remains local preparation; nothing has been deployed.
+
 Golixco’s company homepage: a minimal, black-and-white, pixel-inspired React experience with a company assistant and links to **Lolixco’s live public beta** at [lol.golixco.com](https://lol.golixco.com/).
 
 Mission 01 prepares local development and a future Vercel deployment. **Nothing has been deployed.** The existing design can be improved; the previous visual-freeze restriction is superseded.
@@ -26,7 +28,7 @@ GEMINI_MODEL=gemini-3.5-flash-lite
 
 Paste the real key into ignored `.env.local`, then restart Vite. Do not use a `VITE_` key, commit credentials, or put them in a screenshot. Vite loads local server configuration without exposing it to browser code. `npm run preview` serves the built frontend **only**; it does not run the API.
 
-The default [Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite) model was checked against Google’s published model documentation on 2026-11-10. Account access and actual provider quality/latency still need a real-key smoke test; model availability can change. `GEMINI_MODEL` is a server-side override. No owner key was available during this mission.
+The default [Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite) model was checked against Google’s published model documentation on 2026-11-10. Account access and actual provider quality/latency still need a real-key smoke test; model availability can change. `GEMINI_MODEL` is a server-side override. Real Gemini checks are recorded in the Mission 02 verification report; Backboard requires separate credentials, catalog selection and storage approval.
 
 ## Assistant architecture
 
@@ -35,7 +37,7 @@ The default [Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models
 - `server/knowledge.ts` supplies curated FAQ answers and company-only provider instructions. Curated answers are facts, not simulated Gemini output. Longer comparisons and detailed questions use the provider.
 - `shared/official.ts` is the single source for approved social URLs, product routes and contacts. The UI and assistant use those exact links. See [social audit](docs/social-audit.md) for verification limits.
 - The backend sends SSE `start`, `delta`, `done`, and `error` events. Provider text is forwarded as it arrives; curated answers arrive in one immediate delta. The client supports Stop, New chat, partial errors, a 40-second connection deadline and scrolling confined to the conversation. Provider cancellation stops local delivery; Google may still charge for work already started.
-- No chat transcript is persisted by this application. The browser sends at most eight recent usable turns, reduced to fit the context budget. Relevant user input is sent to Gemini for detailed conversation. Errors and cancelled assistant messages are excluded from subsequent provider history.
+- No chat transcript is persisted in a local application database. Gemini requests go to Google. The optional Backboard adapter creates temporary provider-side conversation state, with best-effort deletion, and is disabled until the owner approves that storage behavior. The browser sends at most eight recent usable turns, reduced to fit the context budget. Relevant user input is sent to Gemini for detailed conversation. Errors and cancelled assistant messages are excluded from subsequent provider history.
 - React Markdown skips raw HTML, suppresses images, and allows only exact approved HTTPS/mailto destinations. Markdown loads on demand to reduce initial JavaScript.
 
 The knowledge covers Lolixco’s live public beta; Home, Explore, Search, Shorts, Shuffle, Edit of the Moment, Immersion and Creator Studio; its **57-edit initial catalog (27 YouTube + 30 hosted)**; and all six experimental analysis dimensions. The launch count is not represented as a real-time statistic. Leadership identities remain private. 2020 is the origin of a name, not a formal company founding date.
@@ -72,14 +74,14 @@ npm run test:ui
 npm audit
 ```
 
-Node tests cover the 24 acceptance scenarios (including the contextual fourth-dimension case), malicious history and links, request limits, streaming, cancellation, timeouts, provider failures, and the standalone function bundle. Browser tests use real local FAQ responses and explicitly synthetic provider/error payloads. Tests do **not** verify Gemini’s real output, quota, account access or real latency without a key.
+Node tests cover blog content/metadata/link construction, quota-only provider failover, and the 24 acceptance scenarios (including the contextual fourth-dimension case), malicious history and links, request limits, streaming, cancellation, timeouts, provider failures, and the standalone function bundle. Browser tests cover mobile/desktop blog routes, section navigation, animation timing, summary tools and real local FAQ responses and explicitly synthetic provider/error payloads. Synthetic tests do **not** establish live provider quality. A small real Gemini sample and its incomplete/error cases are documented in docs/verification.md. Backboard remains unverified without its key, selected model and storage approval.
 
 ## Future Vercel deployment — owner authorization still required
 
-Use the Vite preset, root of this repository, Node 24.x, `npm ci`, `npm run build`, and output directory `dist`. `api/chat.ts` runs as a Node function with a 45-second maximum. `vercel.json` supplies security headers/CSP, static caching, and API no-store behavior. Source maps are not published. The function’s statically imported knowledge is validated by an isolated bundle test. Unknown paths have a real HTTP 404 and branded fallback; no blanket rewrite captures API calls or missing assets.
+Use the Vite preset, root of this repository, Node 24.x, `npm ci`, `npm run build`, and output directory `dist`. `api/chat.ts` runs as a Node function with a 45-second maximum. `vercel.json` supplies security headers/CSP, static caching, and API no-store behavior. Source maps are not published. The function’s statically imported knowledge is validated by an isolated bundle test. Valid blog routes are emitted as directory index HTML and use clean URLs. Unknown paths have a real HTTP 404 and branded fallback; no blanket rewrite captures API calls or missing assets.
 
 Set server-side `GEMINI_API_KEY` and `GEMINI_MODEL` in the intended Vercel environment. Configure shared edge rate limiting and provider quotas before exposing the API. Smoke-test actual function streaming, missing assets, canonical domain, origin handling and error responses on an authorized preview before production.
 
-**Git-triggered Vercel deployment is disabled** with `git.deploymentEnabled: false`, so opening this mission’s PR must not deploy the site. Re-enable only after owner authorization. The frontend bundle contains no Gemini SDK, server knowledge or API key.
+**Git-triggered Vercel deployment is disabled** with `git.deploymentEnabled: false`, so opening this mission’s PR must not deploy the site. Re-enable only after owner authorization. The frontend bundle contains no Gemini SDK, server knowledge or API key. The build prerenders all four public routes with unique metadata, structured data, RSS and sitemap; article publication dates remain pending owner approval.
 
 Vercel’s [Hobby rules](https://vercel.com/docs/plans/hobby) restrict that plan to non-commercial personal use. This official company website should use an eligible commercial plan, normally **Pro**; the owner must choose/authorize the plan. No subscription or purchase has been made. The future canonical URL is `https://golixco.com/`; domain attachment and redirects remain deployment-time tasks. Do not change Cloudflare DNS, mail routing, `lol.golixco.com`, CloudFront, ACM or AWS resources as part of this local mission.

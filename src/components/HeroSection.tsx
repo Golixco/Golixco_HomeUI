@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { RevealContainer, RevealItem } from './ScrollReveal';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { BrandName } from './BrandName';
 import { safeOfficialLink } from '../../shared/official';
 
 const ReactMarkdown = lazy(() => import('react-markdown'));
@@ -19,16 +20,6 @@ interface Message {
   text: string;
   failed?: boolean;
 }
-const LANGUAGES = [
-  'Golixco',
-  'गोलिक्सको',
-  'Golixco',
-  'ゴリクスコ',
-  'Golixco',
-  'Γκόλιξκο',
-  'Golixco',
-  'غوليكسكو',
-];
 const questions = [
   { label: 'What is Golixco?', question: 'What is Golixco?', icon: Sparkles },
   { label: 'Meet Lolixco', question: 'What is Lolixco?', icon: Rocket },
@@ -39,7 +30,6 @@ const questions = [
 export function HeroSection() {
   const [isFocused, setIsFocused] = useState(false);
   const [inputValue, setInputValue] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState('');
@@ -57,14 +47,6 @@ export function HeroSection() {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [messages, isLoading, error]);
   useEffect(() => () => abortRef.current?.abort(), []);
-  useEffect(() => {
-    if (reduced || !showRotatingName) return;
-    const id = setTimeout(
-      () => setCurrentIndex((i) => (i + 1) % LANGUAGES.length),
-      LANGUAGES[currentIndex] === 'Golixco' ? 5000 : 2400,
-    );
-    return () => clearTimeout(id);
-  }, [currentIndex, showRotatingName, reduced]);
 
   const handleSend = async (text = inputValue) => {
     if (!text.trim() || text.length > 1200 || loadingRef.current) return;
@@ -182,24 +164,16 @@ export function HeroSection() {
       className="min-h-[80svh] flex flex-col items-center justify-center pt-32 pb-16 px-4 relative z-10 scroll-mt-24"
     >
       <RevealContainer viewportMargin="0px" className="w-full max-w-3xl flex flex-col items-center">
-        <RevealItem>
-          <p className="text-[11px] tracking-[0.24em] uppercase text-white/45 mb-6 text-center">
-            Curiosity meets possibility
-          </p>
-        </RevealItem>
+        <div aria-hidden="true" className="h-4 mb-6" />
         <RevealItem>
           <h1
             id="hero-heading"
-            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-5 tracking-tight text-center text-white leading-[1.15]"
+            className="text-3xl sm:text-4xl md:text-[clamp(2rem,3.3vw,3rem)] md:whitespace-nowrap font-bold mb-5 tracking-tight text-center text-white leading-[1.15]"
           >
             What would you like to know about <span className="sr-only">Golixco?</span>
           </h1>
         </RevealItem>
-        <RevealItem>
-          <p className="text-sm text-white/55 mb-9 text-center">
-            Our company. Our ideas. The products we're bringing to life.
-          </p>
-        </RevealItem>
+        <div aria-hidden="true" className="h-5 mb-9" />
         <RevealItem className="w-full max-w-2xl">
           <form
             onSubmit={(e) => {
@@ -208,24 +182,7 @@ export function HeroSection() {
             }}
             className="relative flex items-center bg-[#0E0E0E] rounded-2xl border border-white/10 focus-within:border-white/35 focus-within:shadow-[0_0_32px_rgba(255,255,255,0.04)] transition-all duration-300"
           >
-            {showRotatingName && (
-              <div
-                aria-hidden="true"
-                className="absolute inset-y-0 left-5 flex items-center pointer-events-none overflow-hidden"
-              >
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={currentIndex}
-                    initial={{ opacity: 0, y: reduced ? 0 : 10 }}
-                    animate={{ opacity: 0.5, y: 0 }}
-                    exit={{ opacity: 0, y: reduced ? 0 : -10 }}
-                    className="tracking-[0.2em]"
-                  >
-                    {LANGUAGES[currentIndex]}
-                  </motion.span>
-                </AnimatePresence>
-              </div>
-            )}
+            <BrandName paused={!showRotatingName} />
             <label htmlFor="company-question" className="sr-only">
               Ask about Golixco or Lolixco
             </label>
@@ -262,9 +219,7 @@ export function HeroSection() {
               </button>
             )}
           </form>
-          <p className="text-[11px] text-white/40 mt-3 text-center">
-            Ask about Golixco &amp; Lolixco · AI can make mistakes
-          </p>
+          <p className="text-[11px] text-white/30 mt-3 text-center">AI can make mistakes</p>
         </RevealItem>
         {!messages.length ? (
           <RevealItem className="w-full flex flex-wrap justify-center gap-2 mt-6">

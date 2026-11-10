@@ -7,7 +7,7 @@ export const socials = [
   { name: 'Telegram', url: 'https://t.me/GolixcoAI' },
   { name: 'Discord', url: 'https://discord.gg/RcsYSqh7bK' },
   { name: 'GitHub', url: 'https://github.com/GolixcoAI' },
-  { name: 'Facebook', url: 'https://www.facebook.com/people/Golixco/61591436109259/' },
+  { name: 'Facebook', url: 'https://www.facebook.com/Golixco' },
   { name: 'Threads', url: 'https://www.threads.com/@golixco' },
   { name: 'DEV', url: 'https://dev.to/golixco' },
   { name: 'Bluesky', url: 'https://bsky.app/profile/golixco.com' },
@@ -27,8 +27,14 @@ export const productLinks = {
   beta: 'https://lol.golixco.com/beta',
   rights: 'https://lol.golixco.com/rights',
 };
+export const blogLinks = {
+  index: 'https://golixco.com/blog',
+  company: 'https://golixco.com/blog/the-golixco-blog',
+  product: 'https://golixco.com/blog/the-lol-product-lolixco',
+};
 const approvedLinks = new Set<string>([
   'https://golixco.com/',
+  ...Object.values(blogLinks),
   ...socials.map((s) => s.url),
   ...Object.values(productLinks),
   ...Object.values(contacts).map((email) => `mailto:${email}`),

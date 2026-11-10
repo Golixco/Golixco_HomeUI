@@ -6,10 +6,21 @@ export function Footer() {
       <RevealContainer viewportMargin="0px" className="max-w-[1440px] mx-auto flex flex-col gap-8">
         <RevealItem className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <a href="/" aria-label="Golixco home" className="flex items-center gap-2.5">
-            <img src="/brand/golixco-mark.svg" alt="" width="28" height="32" className="w-7 h-8" />
-            <span className="font-semibold tracking-[0.15em]">GOLIXCO</span>
+            <img
+              src="/brand/golixco-mark.svg"
+              alt=""
+              width="28"
+              height="32"
+              className="w-9 h-10 opacity-50 hover:opacity-80 transition-opacity"
+            />
           </a>
           <div className="flex flex-wrap gap-x-5 gap-y-3">
+            <a href="/blog" className="text-xs text-white/55 hover:text-white py-2">
+              Blog
+            </a>
+            <a href="/rss.xml" className="text-xs text-white/55 hover:text-white py-2">
+              RSS
+            </a>
             {socials
               .filter((s) =>
                 ['X', 'LinkedIn', 'Instagram', 'Discord', 'GitHub', 'Reddit'].includes(s.name),

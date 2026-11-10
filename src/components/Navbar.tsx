@@ -43,7 +43,7 @@ export function Navbar() {
       target="_blank"
       rel="noopener noreferrer"
       onClick={close}
-      className="flex items-center gap-3 py-3 hover:text-white/70"
+      className="lolixco-product flex items-center gap-3 py-3 transition-colors duration-200"
     >
       Lolixco{' '}
       <span className="text-[10px] border border-white/20 rounded-full px-2 py-1 text-white/60">
@@ -79,35 +79,35 @@ export function Navbar() {
         <a href="/" aria-label="Golixco home" className="flex items-center gap-2.5 shrink-0">
           <img
             src="/brand/golixco-mark.svg"
-            width="36"
-            height="40"
+            width="52"
+            height="56"
             alt=""
-            className="w-8 h-9 object-contain"
+            className="w-11 h-12 md:w-[52px] md:h-14 object-contain"
           />
-          <span className="text-lg font-bold tracking-[0.15em]">GOLIXCO</span>
         </a>
         <div className="hidden md:flex items-center gap-8">
-          {(['Products', 'Contact'] as const).map((item) => (
-            <button
-              key={item}
-              aria-expanded={dropdown === item}
-              aria-controls="nav-dropdown"
-              onClick={() => setDropdown(dropdown === item ? null : item)}
-              className="text-sm text-white/75 hover:text-white py-3"
-            >
-              {item}
-            </button>
-          ))}
-          <a href="#about" onClick={close} className="text-sm text-white/75 hover:text-white py-3">
-            About
-          </a>
-          <a
-            href="#stay-in-touch"
-            onClick={close}
-            className="text-sm text-white/75 hover:text-white py-3"
-          >
-            Follow
-          </a>
+          {(['Products', 'Blog', 'Contact', 'Follow'] as const).map((item) =>
+            item === 'Blog' || item === 'Follow' ? (
+              <a
+                key={item}
+                href={item === 'Blog' ? '/blog' : '/#stay-in-touch'}
+                onClick={close}
+                className="text-sm text-white/75 hover:text-white py-3"
+              >
+                {item}
+              </a>
+            ) : (
+              <button
+                key={item}
+                aria-expanded={dropdown === item}
+                aria-controls="nav-dropdown"
+                onClick={() => setDropdown(dropdown === item ? null : item)}
+                className="text-sm text-white/75 hover:text-white py-3"
+              >
+                {item}
+              </button>
+            ),
+          )}
         </div>
         <button
           ref={menuRef}
@@ -147,10 +147,13 @@ export function Navbar() {
           >
             <div className="flex flex-col px-6 py-6 gap-3 max-h-[calc(100dvh-4rem)] overflow-y-auto">
               {products}
-              <a href="#about" onClick={close} className="py-3">
+              <a href="/blog" onClick={close} className="py-3">
+                Blog
+              </a>
+              <a href="/#about" onClick={close} className="py-3">
                 About Golixco
               </a>
-              <a href="#stay-in-touch" onClick={close} className="py-3">
+              <a href="/#stay-in-touch" onClick={close} className="py-3">
                 Follow Golixco
               </a>
               <div className="border-t border-white/10 mt-3 pt-3">{contactItems}</div>

@@ -89,7 +89,12 @@ test('warm product hover and keyboard focus, updated Facebook destination', asyn
   const product = page.locator('#nav-dropdown .lolixco-product');
   await product.hover();
   await expect(product).toHaveCSS('color', 'rgb(239, 189, 56)');
+  await page.mouse.move(10, 400);
+  await expect(product).toHaveCSS('color', 'rgb(255, 255, 255)');
   await product.focus();
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Tab');
+  await expect(product).toBeFocused();
   await expect(product).toHaveCSS('color', 'rgb(239, 189, 56)');
   await expect(page.locator('a[href="https://www.facebook.com/Golixco"]').first()).toBeAttached();
   await expect(page.locator('a[href*="61591436109259"]')).toHaveCount(0);

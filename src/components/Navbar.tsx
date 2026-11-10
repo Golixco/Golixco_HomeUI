@@ -127,9 +127,10 @@ export function Navbar() {
         {dropdown && (
           <motion.div
             id="nav-dropdown"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.16 }}
             className="hidden md:block border-t border-white/10 overflow-hidden"
           >
             <div className="max-w-3xl mx-auto flex gap-12 justify-center p-6">

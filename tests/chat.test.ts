@@ -337,3 +337,46 @@ test('fallback quota failures are safe over SSE', async () => {
     await f.close();
   }
 });
+
+test('HTTP cancellation aborts the active fallback provider', async () => {
+  let aborted = false;
+  let ready!: () => void;
+  const started = new Promise<void>((resolve) => {
+    ready = resolve;
+  });
+  const f = await fixture({
+    provider: async function* () {
+      throw { status: 429 };
+    },
+    fallbackProvider: async function* (_message, _history, signal) {
+      yield 'Fallback text';
+      ready();
+      await new Promise<void>((resolve) =>
+        signal.addEventListener(
+          'abort',
+          () => {
+            aborted = true;
+            resolve();
+          },
+          { once: true },
+        ),
+      );
+    },
+  });
+  try {
+    const controller = new AbortController();
+    const response = await fetch(f.url, {
+      method: 'POST',
+      headers,
+      body: complex,
+      signal: controller.signal,
+    });
+    await started;
+    controller.abort();
+    await delay(30);
+    assert.equal(aborted, true);
+    await response.body?.cancel().catch(() => {});
+  } finally {
+    await f.close();
+  }
+});

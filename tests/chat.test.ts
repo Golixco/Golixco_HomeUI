@@ -303,3 +303,37 @@ test('feature support is distinct from contacting support; latest topic controls
     /Explore Lolixco/,
   );
 });
+
+test('application rate limiting stops Gemini and Backboard before either is called', async () => {
+  let calls = 0;
+  const provider = async function* () {
+    calls++;
+    yield 'unreachable';
+  };
+  const f = await fixture({ provider, fallbackProvider: provider, limiter: () => false });
+  try {
+    const r = await fetch(f.url, { method: 'POST', headers, body: complex });
+    assert.equal(r.status, 429);
+    assert.equal(calls, 0);
+  } finally {
+    await f.close();
+  }
+});
+test('fallback quota failures are safe over SSE', async () => {
+  const f = await fixture({
+    provider: async function* () {
+      throw { status: 429 };
+    },
+    fallbackProvider: async function* () {
+      throw Object.assign(new Error('SECRET FALLBACK BODY'), { status: 429 });
+    },
+  });
+  try {
+    const r = await fetch(f.url, { method: 'POST', headers, body: complex });
+    const body = await r.text();
+    assert.match(body, /provider quota/);
+    assert.doesNotMatch(body, /SECRET/);
+  } finally {
+    await f.close();
+  }
+});

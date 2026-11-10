@@ -1,16 +1,17 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import {
+  createBackboard,
+  backboardConfigured,
+  createFailover,
+  type Provider,
+} from './providers.ts';
 import { createHash } from 'node:crypto';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import { getLocalAnswer, systemInstruction, type ChatMessage } from './knowledge.ts';
 
 export const MAX_BODY_BYTES = 20_000;
 export const MAX_MESSAGE = 1200;
 export type ChatRequest = IncomingMessage & { body?: unknown };
-type Provider = (
-  message: string,
-  history: ChatMessage[],
-  signal: AbortSignal,
-) => AsyncIterable<string>;
 class RequestError extends Error {
   constructor(
     public status: number,
@@ -84,14 +85,32 @@ export async function* geminiStream(message: string, history: ChatMessage[], sig
       })),
       { role: 'user', parts: [{ text: message }] },
     ],
-    config: { systemInstruction, temperature: 0.2, maxOutputTokens: 1800, abortSignal: signal },
+    config: {
+      systemInstruction,
+      temperature: 0.2,
+      maxOutputTokens: 2048,
+      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+      abortSignal: signal,
+    },
   });
-  for await (const chunk of stream) if (chunk.text) yield chunk.text;
+  yield* checkedGeminiChunks(stream);
+}
+export async function* checkedGeminiChunks(
+  stream: AsyncIterable<{ text?: string; candidates?: { finishReason?: string }[] }>,
+) {
+  let finishReason: string | undefined;
+  for await (const chunk of stream) {
+    for (const candidate of chunk.candidates ?? [])
+      if (candidate.finishReason) finishReason = candidate.finishReason;
+    if (chunk.text) yield chunk.text;
+  }
+  if (finishReason !== 'STOP') throw new Error('Provider response interrupted');
 }
 
 export function createChatHandler(
   options: {
     provider?: Provider;
+    fallbackProvider?: Provider;
     timeoutMs?: number;
     limiter?: ReturnType<typeof createLimiter>;
   } = {},
@@ -100,6 +119,23 @@ export function createChatHandler(
   let active = 0;
   let budgetDay = Math.floor(Date.now() / 86_400_000);
   let providerCalls = 0;
+  const routedProvider = createFailover(
+    options.provider ?? geminiStream,
+    options.fallbackProvider ?? (backboardConfigured() ? createBackboard() : undefined),
+    () => {
+      const day = Math.floor(Date.now() / 86_400_000);
+      if (day !== budgetDay) {
+        budgetDay = day;
+        providerCalls = 0;
+      }
+      if (providerCalls >= 200)
+        throw new RequestError(
+          429,
+          'The assistant has reached its daily request allowance. Please try again later.',
+        );
+      providerCalls++;
+    },
+  );
   return async (req: ChatRequest, res: ServerResponse) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -192,7 +228,6 @@ export function createChatHandler(
           return;
         }
         active++;
-        providerCalls++;
         counted = true;
       }
       res.statusCode = 200;
@@ -215,11 +250,7 @@ export function createChatHandler(
         }, 5000);
         let chars = 0;
         const consume = async () => {
-          for await (const text of (options.provider ?? geminiStream)(
-            message,
-            history,
-            controller.signal,
-          )) {
+          for await (const text of routedProvider(message, history, controller.signal)) {
             if (controller.signal.aborted || res.destroyed) break;
             chars += text.length;
             if (chars > 12_000) {

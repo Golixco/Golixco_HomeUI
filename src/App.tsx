@@ -1,3 +1,4 @@
+import { MotionConfig } from 'motion/react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { AboutSection } from './components/AboutSection';
@@ -7,25 +8,30 @@ import { NewsletterSection } from './components/NewsletterSection';
 import { Footer } from './components/Footer';
 import { NotFound } from './components/NotFound';
 
-export default function App() {
+export default function App({ path = '/' }: { path?: string }) {
   // Simple SPA routing to handle 404s
-  if (window.location.pathname !== '/') {
+  if (path !== '/') {
     return <NotFound />;
   }
 
   return (
-    <div className="bg-black text-white min-h-screen selection:bg-white/20 overflow-x-clip flex flex-col">
-      <Navbar />
-      
-      <main className="flex-1 overflow-x-clip">
-        <HeroSection />
-        <AboutSection />
-        <HistoryTimeline />
-        <InfiniteSocialConveyor />
-        <NewsletterSection />
-      </main>
+    <MotionConfig reducedMotion="user">
+      <div className="bg-black text-white min-h-screen selection:bg-white/20 overflow-x-clip flex flex-col">
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
+        <Navbar />
 
-      <Footer />
-    </div>
+        <main id="main-content" className="flex-1 overflow-x-clip">
+          <HeroSection />
+          <AboutSection />
+          <HistoryTimeline />
+          <InfiniteSocialConveyor />
+          <NewsletterSection />
+        </main>
+
+        <Footer />
+      </div>
+    </MotionConfig>
   );
 }

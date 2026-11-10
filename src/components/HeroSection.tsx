@@ -1,259 +1,354 @@
-import { useState, useEffect, useRef } from 'react';
-import { ArrowRight, Sparkles, Target, Zap, Rocket, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import {
+  ArrowRight,
+  Sparkles,
+  Target,
+  Zap,
+  Rocket,
+  Loader2,
+  Square,
+  RotateCcw,
+} from 'lucide-react';
 import { RevealContainer, RevealItem } from './ScrollReveal';
-import { motion, AnimatePresence } from 'motion/react';
-import ReactMarkdown from 'react-markdown';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { BrandName } from './BrandName';
+import { safeOfficialLink } from '../../shared/official';
 
+const ReactMarkdown = lazy(() => import('react-markdown'));
 interface Message {
   role: 'user' | 'bot';
   text: string;
+  failed?: boolean;
 }
-
-const LANGUAGES = [
-  "Golixco", // English
-  "Голикско", // Russian
-  "Γκόλιξκο", // Greek
-  "Golixco", // English
-  "غوليكسكو", // Arabic
-  "גוליקסקו", // Hebrew
-  "Golixco", // English
-  "गोलिक्सको", // Hindi
-  "ગોલિક્સકો", // Gujarati
-  "Golixco", // English
-  "戈利克斯科", // Chinese
-  "ゴリクスコ", // Japanese
-  "Golixco", // English
-  "โกลิกซ์โก", // Thai
-  "கோலிக்ஸ்கோ", // Tamil
-  "Golixco", // English
-  "গলিক্সকো", // Bengali
-  "ਗੋਲਿਕਸਕੋ", // Punjabi
-  "Golixco", // English
-  "გოლიქსკო", // Georgian
-  "Գոլիքսկո", // Armenian
-  "Golixco", // English
-  "Голікско", // Ukrainian
-  "گولیکسکو"  // Persian
+const questions = [
+  { label: 'What is Golixco?', question: 'What is Golixco?', icon: Sparkles },
+  { label: 'Meet Lolixco', question: 'What is Lolixco?', icon: Rocket },
+  { label: 'Creator Studio', question: 'Explain Creator Studio.', icon: Zap },
+  { label: 'Our mission', question: 'What is the mission of Golixco?', icon: Target },
 ];
-
-const QUICK_QUESTIONS: Record<string, string> = {
-  "What is Golixco?": "What is Golixco?",
-  "Our Mission": "What is the mission of Golixco?",
-  "Latest Updates": "What are the latest updates from Golixco?",
-  "Future Plans": "What are the future plans for Golixco?"
-};
 
 export function HeroSection() {
   const [isFocused, setIsFocused] = useState(false);
   const [inputValue, setInputValue] = useState('');
-  const [shouldAnimate, setShouldAnimate] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const loadingRef = useRef(false);
+  const followScroll = useRef(true);
+  const reduced = useReducedMotion();
+  const showRotatingName = !isFocused && !inputValue && !messages.length;
 
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [messages, isLoading]);
+    if (chatRef.current && followScroll.current)
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  }, [messages, isLoading, error]);
+  useEffect(() => () => abortRef.current?.abort(), []);
 
-  const handleSend = async (text: string = inputValue) => {
-    if (!text.trim() || isLoading) return;
-
+  const handleSend = async (text = inputValue) => {
+    if (!text.trim() || text.length > 1200 || loadingRef.current) return;
+    loadingRef.current = true;
+    const controller = new AbortController();
+    abortRef.current = controller;
     const userMessage = text.trim();
+    const history = messages
+      .filter((m) => !m.failed && m.text)
+      .slice(-8)
+      .map(({ role, text }) => ({ role, text: text.slice(0, 2000) }));
+    // Retain a small request context; the visible conversation can be longer.
+    while (history.reduce((n, m) => n + m.text.length, userMessage.length) > 10_000)
+      history.shift();
+    const botIndex = messages.length + 1;
+    setMessages((prev) => [
+      ...prev,
+      { role: 'user', text: userMessage },
+      { role: 'bot', text: '' },
+    ]);
     setInputValue('');
-    setShouldAnimate(false);
-
-    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setIsLoading(true);
-
+    setError('');
+    setStatus('Thinking…');
+    followScroll.current = true;
+    let finished = false;
+    let receivedText = false;
+    const timer = setTimeout(() => controller.abort('timeout'), 40_000);
     try {
-      const history = messages.map(m => ({ role: m.role, text: m.text }));
-
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage, history })
+        headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+        body: JSON.stringify({ message: userMessage, history }),
+        signal: controller.signal,
       });
-
       if (!response.ok) {
-        throw new Error('Failed to fetch response');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(
+          data.error || 'The assistant is temporarily unavailable. Please try again.',
+        );
       }
-
-      const data = await response.json();
-      setMessages(prev => [...prev, { role: 'bot', text: data.reply }]);
-    } catch (error) {
-      console.error("Chat error:", error);
-      setMessages(prev => [...prev, { role: 'bot', text: "I'm sorry, I'm having trouble connecting right now." }]);
+      if (!response.body)
+        throw new Error('Streaming is unavailable in this browser. Please try another browser.');
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      const acceptEvent = (frame: string) => {
+        const data = frame
+          .split('\n')
+          .filter((line) => line.startsWith('data: '))
+          .map((line) => line.slice(6))
+          .join('\n');
+        if (!data) return;
+        const event = JSON.parse(data);
+        if (event.type === 'delta' && typeof event.text === 'string') {
+          receivedText = true;
+          setStatus('Responding…');
+          setMessages((prev) =>
+            prev.map((m, i) => (i === botIndex ? { ...m, text: m.text + event.text } : m)),
+          );
+        }
+        if (event.type === 'error')
+          throw new Error(event.error || 'The response was interrupted. Please try again.');
+        if (event.type === 'done') finished = true;
+      };
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          buffer += decoder.decode(value, { stream: !done });
+          let end: number;
+          while ((end = buffer.indexOf('\n\n')) !== -1) {
+            const frame = buffer.slice(0, end);
+            buffer = buffer.slice(end + 2);
+            acceptEvent(frame);
+          }
+          if (done) break;
+        }
+      } finally {
+        await reader.cancel().catch(() => {});
+        reader.releaseLock();
+      }
+      if (!finished || !receivedText)
+        throw new Error('The response was interrupted. Please try again.');
+      setStatus('Response complete');
+    } catch (err) {
+      const stopped = controller.signal.aborted;
+      const message = stopped
+        ? controller.signal.reason === 'timeout'
+          ? 'The response took too long. Please try again.'
+          : 'Response stopped.'
+        : err instanceof Error
+          ? err.message
+          : 'Connection interrupted. Please try again.';
+      setError(message);
+      setStatus(message);
+      setMessages((prev) => prev.map((m, i) => (i === botIndex ? { ...m, failed: true } : m)));
     } finally {
+      clearTimeout(timer);
       setIsLoading(false);
+      loadingRef.current = false;
+      abortRef.current = null;
     }
   };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSend();
-    }
+  const clearChat = () => {
+    setMessages([]);
+    setError('');
+    setStatus('Conversation cleared');
+    inputRef.current?.focus();
   };
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    if (isFocused || inputValue.length > 0) {
-      setShouldAnimate(false);
-    } else {
-      timeoutId = setTimeout(() => {
-        setShouldAnimate(true);
-        setCurrentIndex(0);
-      }, 2000);
-    }
-
-    return () => clearTimeout(timeoutId);
-  }, [isFocused, inputValue]);
-
-  useEffect(() => {
-    if (!shouldAnimate) return;
-
-    const isEnglish = LANGUAGES[currentIndex] === "Golixco";
-    const duration = isEnglish ? 5000 : 2000;
-
-    const timeoutId = setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % LANGUAGES.length);
-    }, duration);
-
-    return () => clearTimeout(timeoutId);
-  }, [currentIndex, shouldAnimate]);
 
   return (
-    <section className="min-h-[80vh] flex flex-col items-center justify-center pt-32 pb-16 px-4 relative z-10">
-      <RevealContainer className="w-full max-w-3xl flex flex-col items-center">
+    <section
+      id="ask"
+      aria-labelledby="hero-heading"
+      className="min-h-[80svh] flex flex-col items-center justify-center pt-32 pb-16 px-4 relative z-10 scroll-mt-24"
+    >
+      <RevealContainer viewportMargin="0px" className="w-full max-w-3xl flex flex-col items-center">
+        <div aria-hidden="true" className="h-4 mb-6" />
         <RevealItem>
-          <h1 className="text-4xl md:text-5xl font-bold mb-12 tracking-tight text-center text-white">
-            What would you like to know about
+          <h1
+            id="hero-heading"
+            className="text-3xl sm:text-4xl md:text-[clamp(2rem,3.3vw,3rem)] md:whitespace-nowrap font-bold mb-5 tracking-tight text-center text-white leading-[1.15]"
+          >
+            What would you like to know about <span className="sr-only">Golixco?</span>
           </h1>
         </RevealItem>
-
-        <RevealItem className="w-full max-w-2xl mb-8">
-          <div className="relative group flex items-center bg-[#0E0E0E] rounded-2xl border border-white/[0.06] hover:border-white/[0.12] transition-colors duration-300 overflow-hidden">
-            <AnimatePresence>
-              {shouldAnimate && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute inset-0 pointer-events-none"
-                >
-                  <AnimatePresence>
-                    <motion.div
-                      key={currentIndex}
-                      initial={{ y: 22, opacity: 0, filter: 'blur(2px)' }}
-                      animate={{ y: 0, opacity: 0.35, filter: 'blur(0px)' }}
-                      exit={{ y: -22, opacity: 0, filter: 'blur(2px)' }}
-                      transition={{ duration: 1.1, ease: [0.22, 0.61, 0.36, 1] }}
-                      className="absolute inset-0 flex items-center justify-start pl-6"
-                    >
-                      <span className="font-medium tracking-[0.22em] text-white">
-                        {LANGUAGES[currentIndex]}
-                      </span>
-                    </motion.div>
-                  </AnimatePresence>
-                </motion.div>
-              )}
-            </AnimatePresence>
+        <div aria-hidden="true" className="h-5 mb-9" />
+        <RevealItem className="w-full max-w-2xl">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSend();
+            }}
+            className="relative flex items-center bg-[#0E0E0E] rounded-2xl border border-white/10 focus-within:border-white/35 focus-within:shadow-[0_0_32px_rgba(255,255,255,0.04)] transition-all duration-300"
+          >
+            <BrandName paused={!showRotatingName} />
+            <label htmlFor="company-question" className="sr-only">
+              Ask about Golixco or Lolixco
+            </label>
             <input
+              ref={inputRef}
+              id="company-question"
               type="text"
+              autoComplete="off"
+              maxLength={1200}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              onKeyDown={handleKeyDown}
-              className="w-full bg-transparent text-white px-6 py-5 outline-none rounded-2xl text-lg relative z-10 text-left"
+              placeholder={showRotatingName ? '' : 'Ask about Golixco or Lolixco…'}
+              className="w-full min-w-0 bg-transparent text-white pl-5 pr-16 py-5 outline-none rounded-2xl text-base placeholder:text-white/35"
             />
-            <button
-              onClick={() => handleSend()}
-              disabled={isLoading || !inputValue.trim()}
-              className="absolute right-3 p-3 bg-white/[0.06] hover:bg-white/[0.12] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-colors z-20"
-            >
-              {isLoading ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <ArrowRight className="w-5 h-5 text-white" />}
-            </button>
-          </div>
-        </RevealItem>
-
-        {messages.length === 0 ? (
-          <RevealItem className="w-full flex flex-wrap justify-center gap-3">
-            {[
-              { text: "What is Golixco?", icon: <Sparkles className="w-4 h-4" /> },
-              { text: "Our Mission", icon: <Target className="w-4 h-4" /> },
-              { text: "Latest Updates", icon: <Zap className="w-4 h-4" /> },
-              { text: "Future Plans", icon: <Rocket className="w-4 h-4" /> }
-            ].map((pill, i) => (
+            {isLoading ? (
               <button
-                key={i}
-                onClick={() => {
-                  const mappedQuestion = QUICK_QUESTIONS[pill.text] || pill.text;
-                  setInputValue(mappedQuestion);
-                }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/[0.06] bg-[#090909] hover:border-white/[0.12] transition-colors duration-300 text-sm font-medium text-white/70 hover:text-white"
+                type="button"
+                onClick={() => abortRef.current?.abort()}
+                aria-label="Stop response"
+                className="absolute right-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl"
               >
-                {pill.icon}
-                {pill.text}
+                <Square className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!inputValue.trim()}
+                aria-label="Send question"
+                className="absolute right-3 p-3 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl transition-colors"
+              >
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            )}
+          </form>
+          <p className="text-[11px] text-white/30 mt-3 text-center">AI can make mistakes</p>
+        </RevealItem>
+        {!messages.length ? (
+          <RevealItem className="w-full flex flex-wrap justify-center gap-2 mt-6">
+            {questions.map(({ label, question, icon: Icon }) => (
+              <button
+                key={label}
+                onClick={() => {
+                  setInputValue(question);
+                  inputRef.current?.focus();
+                }}
+                className="flex items-center gap-2 px-4 py-3 rounded-full border border-white/[0.08] bg-[#090909] hover:bg-white/[0.06] hover:border-white/25 transition-colors text-xs sm:text-sm text-white/70 hover:text-white"
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
               </button>
             ))}
           </RevealItem>
         ) : (
-          <RevealItem className="w-full max-w-2xl mt-4">
-            <div
-              ref={chatContainerRef}
-              className="flex flex-col gap-4 max-h-[40vh] overflow-y-auto pr-2"
-              style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}
-            >
-              {messages.map((msg, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[85%] px-5 py-4 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                        ? 'bg-white/10 text-white rounded-br-sm'
-                        : 'bg-[#090909] border border-white/[0.06] text-white/90 rounded-bl-sm'
-                      }`}
-                  >
-                    {msg.role === 'user' ? (
-                      msg.text.split('\n').map((line, i) => (
-                        <span key={i}>
-                          {line}
-                          {i !== msg.text.split('\n').length - 1 && <br />}
-                        </span>
-                      ))
-                    ) : (
-                      <ReactMarkdown
-                        components={{
-                          p: ({ node, ...props }) => <p className="mb-4 last:mb-0" {...props} />,
-                          strong: ({ node, ...props }) => <strong className="font-bold text-white" {...props} />,
-                          em: ({ node, ...props }) => <em className="italic" {...props} />,
-                          ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-4 last:mb-0 space-y-1" {...props} />,
-                          ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-4 last:mb-0 space-y-1" {...props} />,
-                          li: ({ node, ...props }) => <li {...props} />,
-                          a: ({ node, ...props }) => <a className="underline hover:text-white/80 transition-colors" target="_blank" rel="noopener noreferrer" {...props} />,
-                          code: ({ node, inline, ...props }: any) =>
-                            inline
-                              ? <code className="bg-white/10 px-1.5 py-0.5 rounded-md text-xs font-mono" {...props} />
-                              : <pre className="bg-black/50 p-3 rounded-lg overflow-x-auto text-xs font-mono mb-4 last:mb-0"><code {...props} /></pre>,
-                        }}
-                      >
-                        {msg.text}
-                      </ReactMarkdown>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
+          <div className="w-full max-w-2xl mt-6">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] uppercase tracking-[0.15em] text-white/40">
+                Golixco assistant
+              </span>
+              <button
+                disabled={isLoading}
+                onClick={clearChat}
+                className="flex gap-1.5 items-center p-2 text-xs text-white/55 hover:text-white disabled:opacity-30"
+              >
+                <RotateCcw className="w-3 h-3" />
+                New chat
+              </button>
             </div>
-          </RevealItem>
+            <div
+              ref={chatRef}
+              role="log"
+              aria-label="Conversation with Golixco"
+              aria-busy={isLoading}
+              tabIndex={0}
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                followScroll.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+              }}
+              className="flex flex-col gap-4 max-h-[min(52svh,520px)] overflow-y-auto overscroll-contain pr-2 pb-2"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(255,255,255,0.15) transparent',
+              }}
+            >
+              {messages.map((msg, idx) =>
+                msg.text || (isLoading && idx === messages.length - 1) ? (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: reduced ? 0 : 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`min-w-0 max-w-[95%] sm:max-w-[90%] px-4 sm:px-5 py-4 rounded-2xl text-sm leading-relaxed break-words [overflow-wrap:anywhere] ${msg.role === 'user' ? 'bg-white/10 text-white rounded-br-sm whitespace-pre-wrap' : 'chat-markdown bg-[#090909] border border-white/[0.08] text-white/85 rounded-bl-sm'}`}
+                    >
+                      <span className="sr-only">
+                        {msg.role === 'user' ? 'You: ' : 'Golixco assistant: '}
+                      </span>
+                      {!msg.text ? (
+                        <span className="flex items-center gap-2 text-white/50">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Thinking…
+                        </span>
+                      ) : msg.role === 'user' ? (
+                        msg.text
+                      ) : (
+                        <Suspense
+                          fallback={<span className="whitespace-pre-wrap">{msg.text}</span>}
+                        >
+                          <ReactMarkdown
+                            skipHtml
+                            urlTransform={(url) => safeOfficialLink(url) || ''}
+                            components={{
+                              a: ({ href, children }) =>
+                                href ? (
+                                  <a
+                                    href={href}
+                                    target={href.startsWith('mailto:') ? undefined : '_blank'}
+                                    rel="noopener noreferrer"
+                                  >
+                                    {children}
+                                  </a>
+                                ) : (
+                                  <span>{children}</span>
+                                ),
+                              img: () => null,
+                            }}
+                          >
+                            {msg.text}
+                          </ReactMarkdown>
+                        </Suspense>
+                      )}
+                      {msg.failed && msg.text && (
+                        <p className="text-xs text-white/45 mt-3">Response interrupted</p>
+                      )}
+                    </div>
+                  </motion.div>
+                ) : null,
+              )}
+            </div>
+            {error && (
+              <p
+                role="alert"
+                className="text-sm text-white/65 border border-white/10 rounded-xl p-3 mt-3"
+              >
+                {error}
+              </p>
+            )}
+            {isLoading && (
+              <p aria-hidden="true" className="text-xs text-white/45 mt-3">
+                {status}{' '}
+                <button
+                  type="button"
+                  className="underline ml-2"
+                  onClick={() => abortRef.current?.abort()}
+                >
+                  Stop
+                </button>
+              </p>
+            )}
+          </div>
         )}
+        <span role="status" aria-live="polite" className="sr-only">
+          {status}
+        </span>
       </RevealContainer>
     </section>
   );

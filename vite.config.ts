@@ -1,64 +1,129 @@
-import 'dotenv/config';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
-import {defineConfig, Plugin} from 'vite';
+import path from 'node:path';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 
 function apiChatPlugin(): Plugin {
   return {
-    name: 'api-chat-dev-server',
+    name: 'golixco-local-api',
     configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        if (req.url === '/api/chat' && req.method === 'POST') {
-          let body = '';
-          req.on('data', chunk => {
-            body += chunk;
-          });
-          req.on('end', async () => {
+      server.middlewares.use(async (req, res, next) => {
+        try {
+          const pathname = req.url?.split('?')[0];
+          try {
+            decodeURIComponent(pathname ?? '');
+          } catch {
+            res.statusCode = 404;
+            res.end('Not found');
+            return;
+          }
+          if (pathname === '/rss.xml' || pathname === '/sitemap.xml') {
+            const feeds = await server.ssrLoadModule('/scripts/feeds.ts');
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+            res.end(pathname === '/rss.xml' ? feeds.rss() : feeds.sitemap());
+            return;
+          }
+          if (pathname === '/api/chat') {
             try {
-              const parsedBody = body ? JSON.parse(body) : {};
-              const vercelReq = Object.assign(req, { body: parsedBody });
-              const vercelRes = Object.assign(res, {
-                status(code: number) {
-                  this.statusCode = code;
-                  return this;
-                },
-                json(data: any) {
-                  this.setHeader('Content-Type', 'application/json');
-                  this.end(JSON.stringify(data));
-                },
-              });
-              const { default: handler } = await import('./api/chat.ts');
-              await handler(vercelReq as any, vercelRes as any);
-            } catch (err: any) {
-              console.error('Error handling /api/chat:', err);
-              res.statusCode = 500;
-              res.setHeader('Content-Type', 'application/json');
-              res.end(JSON.stringify({ error: err.message || 'Internal server error' }));
+              const { default: handler } = await server.ssrLoadModule('/api/chat.ts');
+              await handler(req, res);
+            } catch {
+              if (!res.headersSent) {
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+              }
+              if (!res.writableEnded)
+                res.end(JSON.stringify({ error: 'The assistant is temporarily unavailable.' }));
             }
-          });
-          return;
+            return;
+          }
+          if (
+            pathname?.startsWith('/api/') ||
+            pathname?.startsWith('/server/') ||
+            pathname === '/api/knowledge.json'
+          ) {
+            res.statusCode = 404;
+            res.end('Not found');
+            return;
+          }
+          if (pathname?.startsWith('/blog/') && /\.[a-z0-9]+$/i.test(pathname)) {
+            const fs = await import('node:fs/promises');
+            const asset = path.resolve('public', '.' + pathname);
+            if (
+              asset.startsWith(path.resolve('public') + path.sep) &&
+              (await fs
+                .stat(asset)
+                .then((s) => s.isFile())
+                .catch(() => false))
+            ) {
+              next();
+              return;
+            }
+            res.statusCode = 404;
+            res.end('Not found');
+            return;
+          }
+          const { publicPaths } = await server.ssrLoadModule('/src/blog/articles.ts');
+          if (
+            req.method === 'GET' &&
+            (req.headers.accept?.includes('text/html') ||
+              publicPaths.includes(pathname) ||
+              (pathname &&
+                !pathname.startsWith('/@') &&
+                !pathname.startsWith('/src/') &&
+                !pathname.startsWith('/node_modules/') &&
+                !/\.[a-z0-9]+$/i.test(pathname)))
+          ) {
+            const fs = await import('node:fs/promises');
+            const template = await fs.readFile(path.resolve('index.html'), 'utf8');
+            const { render } = await server.ssrLoadModule('/src/entry-server.tsx');
+            const { pageDocument } = await server.ssrLoadModule('/scripts/page-document.ts');
+            const valid = publicPaths.includes(pathname);
+            res.statusCode = valid ? 200 : 404;
+            res.setHeader('Content-Type', 'text/html');
+            res.end(
+              await server.transformIndexHtml(
+                req.url!,
+                pageDocument(template, pathname, render(valid ? pathname : '/missing')),
+              ),
+            );
+            return;
+          }
+          next();
+        } catch {
+          if (!res.headersSent) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'text/plain');
+          }
+          if (!res.writableEnded) res.end('Unable to load this page.');
         }
-        next();
       });
     },
   };
 }
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  // Only backend configuration goes into the Node process. Never use Vite define.
+  for (const key of [
+    'GEMINI_API_KEY',
+    'GEMINI_MODEL',
+    'BACKBOARD_API_KEY',
+    'BACKBOARD_LLM_PROVIDER',
+    'BACKBOARD_MODEL',
+    'BACKBOARD_STORAGE_APPROVED',
+  ])
+    if (!process.env[key] && env[key]) process.env[key] = env[key];
   return {
     plugins: [react(), tailwindcss(), apiChatPlugin()],
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, '.'),
-      },
-    },
+    resolve: { alias: { '@': path.resolve(import.meta.dirname, '.') } },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâ€”file watching is disabled to prevent flickering during agent edits.
-      hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      host: '0.0.0.0',
+      port: 3000,
+      strictPort: true,
+      fs: { deny: ['.env', '.env.*', '**/.git/**', '**/server/**', '**/api/**'] },
     },
+    build: { sourcemap: false },
   };
 });

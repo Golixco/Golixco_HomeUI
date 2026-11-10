@@ -1,5 +1,4 @@
-# Security contact information for Golixco
-# Please update this email address before final production deployment.
-Contact: mailto:security@golixco.com
+Contact: mailto:hello@golixco.com
+Expires: 2027-11-10T00:00:00Z
 Preferred-Languages: en
 Canonical: https://golixco.com/.well-known/security.txt

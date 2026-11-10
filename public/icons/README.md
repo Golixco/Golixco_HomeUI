@@ -1,0 +1,1 @@
+Brand icons: LobeHub lobe-icons, MIT license, retrieved 2026-11-10 from https://github.com/lobehub/lobe-icons/tree/master/packages/static-svg/icons . License and copyright notice are retained in LICENSE-lobe-icons.txt. Icons identify external services; they do not imply an affiliation.

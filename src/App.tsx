@@ -8,9 +8,9 @@ import { NewsletterSection } from './components/NewsletterSection';
 import { Footer } from './components/Footer';
 import { NotFound } from './components/NotFound';
 
-export default function App() {
+export default function App({ path = '/' }: { path?: string }) {
   // Simple SPA routing to handle 404s
-  if (window.location.pathname !== '/') {
+  if (path !== '/') {
     return <NotFound />;
   }
 

@@ -27,10 +27,15 @@ Reddit: https://www.reddit.com/r/Golixco/
 GitHub: https://github.com/GolixcoAI
 Discord: https://discord.gg/RcsYSqh7bK
 Telegram: https://t.me/GolixcoAI
-Facebook: https://www.facebook.com/people/Golixco/61591436109259/
+Facebook: https://www.facebook.com/Golixco
 Threads: https://www.threads.com/@golixco
 DEV: https://dev.to/golixco
 Bluesky: https://bsky.app/profile/golixco.com
 
 Newsletter signup is coming soon; the homepage does not save email subscriptions.
 Future products, native mobile apps, accounts, memberships and monetization are not confirmed live.
+
+## The Golixco Blog
+https://golixco.com/blog
+https://golixco.com/blog/the-golixco-blog — Company ideology, history, identity, interface and product-building approach.
+https://golixco.com/blog/the-lol-product-lolixco — Lolixco public-beta discovery, viewing UI, Creator Studio, six dimensions and limitations.

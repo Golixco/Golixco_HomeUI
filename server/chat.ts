@@ -7,7 +7,7 @@ import {
   type Provider,
 } from './providers.ts';
 import { createHash, randomUUID } from 'node:crypto';
-import { createGemini } from './gemini.ts';
+import { createGemini, finishReasons } from './gemini.ts';
 export { checkedGeminiChunks } from './gemini.ts';
 import { getLocalAnswer, type ChatMessage } from './knowledge.ts';
 
@@ -135,6 +135,12 @@ export function createChatHandler(
       status: number,
       providerStatus?: number,
       finishReason?: string,
+      shape?: {
+        packets?: number;
+        hasCandidates?: boolean;
+        arrayPacket?: boolean;
+        blocked?: boolean;
+      },
     ) => {
       // Fixed categories only: no URLs, bodies, IPs, provider errors or conversation text.
       console.info(
@@ -146,11 +152,19 @@ export function createChatHandler(
           ...(providerStatus && providerStatus >= 400 && providerStatus <= 599
             ? { providerStatus }
             : {}),
-          ...(finishReason &&
-          ['MAX_TOKENS', 'SAFETY', 'RECITATION', 'OTHER', 'UNKNOWN'].includes(
-            finishReason,
-          )
+          ...(finishReason && finishReasons.has(finishReason)
             ? { finishReason }
+            : {}),
+          ...(shape &&
+          Number.isInteger(shape.packets) &&
+          shape.packets! >= 0 &&
+          shape.packets! <= 10000
+            ? {
+                packets: shape.packets,
+                hasCandidates: shape.hasCandidates === true,
+                arrayPacket: shape.arrayPacket === true,
+                blocked: shape.blocked === true,
+              }
             : {}),
         }),
       );
@@ -368,6 +382,12 @@ export function createChatHandler(
           status,
           providerStatus,
           (error as { finishReason?: string })?.finishReason,
+          error as {
+            packets?: number;
+            hasCandidates?: boolean;
+            arrayPacket?: boolean;
+            blocked?: boolean;
+          },
         );
         event({ type: 'error', error: message });
         res.end();

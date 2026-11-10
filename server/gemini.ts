@@ -9,17 +9,45 @@ interface GeminiChunk {
     content?: { parts?: { text?: string; thought?: boolean }[] };
   }[];
 }
+export const finishReasons = new Set([
+  'STOP',
+  'MAX_TOKENS',
+  'SAFETY',
+  'RECITATION',
+  'LANGUAGE',
+  'OTHER',
+  'BLOCKLIST',
+  'PROHIBITED_CONTENT',
+  'SPII',
+  'MALFORMED_FUNCTION_CALL',
+  'IMAGE_SAFETY',
+  'UNEXPECTED_TOOL_CALL',
+  'TOO_MANY_TOOL_CALLS',
+  'MISSING_THOUGHT_SIGNATURE',
+  'MALFORMED_RESPONSE',
+  'ESCALATION',
+  'PUP_LIMITED_DISABLED',
+  'CONTINUATION',
+  'UNKNOWN',
+]);
 const interrupted = (reason?: string) =>
   Object.assign(new Error('Provider response interrupted'), {
-    finishReason: ['MAX_TOKENS', 'SAFETY', 'RECITATION', 'OTHER'].includes(
-      reason ?? '',
-    )
-      ? reason
-      : 'UNKNOWN',
+    finishReason: finishReasons.has(reason ?? '') ? reason : 'UNKNOWN',
   });
 export async function* checkedGeminiChunks(stream: AsyncIterable<GeminiChunk>) {
   let finishReason: string | undefined;
+  let packets = 0,
+    hasCandidates = false,
+    arrayPacket = false,
+    blocked = false;
   for await (const chunk of stream) {
+    packets++;
+    arrayPacket ||= Array.isArray(chunk);
+    hasCandidates ||= Boolean(chunk.candidates?.length);
+    blocked ||= Boolean(
+      (chunk as { promptFeedback?: { blockReason?: string } }).promptFeedback
+        ?.blockReason,
+    );
     // HTTP 200 streams can carry structured errors. Preserve the quota signal before decoding text.
     if (chunk.error) {
       const code = chunk.error.code;
@@ -38,7 +66,13 @@ export async function* checkedGeminiChunks(stream: AsyncIterable<GeminiChunk>) {
     }
     if (chunk.text) yield chunk.text;
   }
-  if (finishReason !== 'STOP') throw interrupted(finishReason);
+  if (finishReason !== 'STOP')
+    throw Object.assign(interrupted(finishReason), {
+      packets,
+      hasCandidates,
+      arrayPacket,
+      blocked,
+    });
 }
 
 export function createGemini(fetcher: typeof fetch = fetch): Provider {

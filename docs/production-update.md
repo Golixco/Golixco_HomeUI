@@ -4,7 +4,7 @@
 
 Branch: `fix/production-chat-analytics-seo`, based on current `main` (`4c689ee`).
 Existing project: `golixco`, scope `golixcos-projects`, project ID `prj_oXnRLYFRrE5bSDXuhM336eAoHMhO`.
-Verified functional Preview: https://golixco-ecol9fimu-golixcos-projects.vercel.app (Vercel authentication required).
+Latest tested Preview: https://golixco-e9l3zrso1-golixcos-projects.vercel.app (Vercel authentication required).
 Production remains on `dpl_6P6vm6z4a56X87pDQUXjQzxLnGDP`. No merge, production deployment, promotion, DNS, email, Lolixco infrastructure or paid infrastructure changes were made.
 
 ## Chatbot cause, repair and provider evidence
@@ -17,7 +17,7 @@ Safe production request references: `bom1::c4zjq-1794339845301-3a7569a77932` and
 
 `tsconfig.json` now enables TypeScript's `rewriteRelativeImportExtensions`. Actual Vercel-emitted JavaScript imports `../server/chat.js`; the corresponding compiled module and authoritative JSON are included. `scripts/check-vercel-function.mjs` imports the actual function with plain Node, checks for dangling relative TypeScript imports, changes away from the repo cwd and verifies curated SSE. An esbuild-only test would not reproduce Vercel's TypeScript packaging.
 
-Initial repaired Previews additionally received incomplete Gemini streams with no text or finish reason. A bounded local request and a Vercel build-time SDK probe both completed against the real model, so daily quota exhaustion was not established. The SDK converter in installed `@google/genai` 2.16.0 drops unrecognized SSE error fields. `server/gemini.ts` now reads the documented Gemini REST SSE protocol directly, retaining structured HTTP/SSE error codes before decoding text. This avoids losing a confirmed quota signal. It keeps the same model, knowledge instructions, 2048 output-token limit, minimal thinking, timeout/cancellation, history roles and shared attempt budget. There are no automatic retries. EOF without STOP remains an error; thought parts are excluded from visitor output.
+Initial repaired Previews additionally received incomplete Gemini streams with no text or finish reason. A bounded local request and a Vercel build-time SDK probe both completed against the real model, so daily quota exhaustion was not established. Code inspection shows that the SDK converter in installed `@google/genai` 2.16.0 can drop unrecognized SSE error fields; this is a defensive protocol finding, not proof that a quota error caused the observed empty streams. `server/gemini.ts` now reads the documented Gemini REST SSE protocol directly, retaining structured HTTP/SSE error codes before decoding text. This avoids losing a confirmed quota signal. It keeps the same model, knowledge instructions, 2048 output-token limit, minimal thinking, timeout/cancellation, history roles and shared attempt budget. There are no automatic retries. EOF without STOP remains an error; thought parts are excluded from visitor output.
 
 Final functional Preview evidence:
 
@@ -36,6 +36,10 @@ To repeat the authenticated, **read-only** provider/model/catalog checks in a pr
 `vercel deploy --yes --environment preview --build-env GOLIXCO_CHECK_PROVIDERS=1`
 
 The preflight does not generate text, change environment values, approve storage or select models. Generation probes used during diagnosis have been removed from this script.
+
+### Later smoke-check limitation
+
+A later check of committed revision `063b025` on `https://golixco-bl6f0yi4k-golixcos-projects.vercel.app` reproduced a Gemini stream with no text or finish reason (`provider_interrupted`, `UNKNOWN`). Curated chat still passed. The successful real generation above confirms provider access, but does not establish consistent generation reliability. Daily quota exhaustion was not confirmed. The PR records this as a release limitation. The later diagnostic Preview `https://golixco-e9l3zrso1-golixcos-projects.vercel.app` completed two consecutive real Gemini streams (8 and 10 text deltas, both done). Its expanded whitelist reports only official finish-reason enums and bounded packet/candidate/array/block indicators on an incomplete response. The intermittent empty response has not been attributed to confirmed quota exhaustion. There were no further paid retries or forced failover tests. Do not promote the update until the reliability limitation is resolved or explicitly accepted.
 
 ## OG image and sharing
 

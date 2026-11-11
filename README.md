@@ -6,7 +6,7 @@
 
 Golixco’s company website is live at [golixco.com](https://golixco.com), with a prerendered blog, a guarded company assistant and links to [Lolixco’s separate public beta](https://lol.golixco.com/).
 
-The onboarding guide is the current architecture, setup, security and operations reference. Earlier mission documents record historical preparation; their “not deployed” statements do not describe today's public website. Merged `main` and the active production deployment can differ because Git-triggered Vercel deployment is disabled. See the guide for the verified snapshot and owner-approved release workflow.
+The onboarding guide is the current architecture, setup, security and operations reference. Earlier mission documents record historical preparation; their “not deployed” statements do not describe today's public website. Vercel builds Preview deployments for branch pushes and deploys `main` to `golixco.com`. See the [release workflow](GETTING_STARTED.md#vercel-operations) for CLI deployment and smoke checks.
 
 > The sections below retain earlier implementation reference notes. For current provider verification, publication dates, source/runtime differences and release status, use GETTING_STARTED.md; historical pending checks are not current account-state claims.
 

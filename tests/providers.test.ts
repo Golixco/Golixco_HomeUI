@@ -39,6 +39,22 @@ for (const status of [429, 'RESOURCE_EXHAUSTED'])
     assert.equal(await collect(provider('detail', [], signal())), 'Gemini');
     assert.equal(calls, 2);
   });
+test('Gemini 503 switches once without triggering quota cooldown', async () => {
+  let primaryCalls = 0;
+  let attempts = 0;
+  const provider = createFailover(
+    async function* () {
+      if (++primaryCalls === 1) throw { status: 503 };
+      yield 'Gemini';
+    },
+    async function* () { yield 'Backboard'; },
+    () => { attempts++; },
+    () => 0,
+  );
+  assert.equal(await collect(provider('detail', [], signal())), 'Backboard');
+  assert.equal(await collect(provider('detail', [], signal())), 'Gemini');
+  assert.equal(attempts, 3);
+});
 test('successful Gemini never touches fallback', async () => {
   let called = false;
   const p = createFailover(

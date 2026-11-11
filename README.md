@@ -89,7 +89,7 @@ npm run test:ui
 npm audit
 ```
 
-Node tests cover blog content/metadata/link construction, quota-only provider failover, and the 24 acceptance scenarios (including the contextual fourth-dimension case), malicious history and links, request limits, streaming, cancellation, timeouts, provider failures, and the standalone function bundle. Browser tests cover mobile/desktop blog routes, section navigation, animation timing, summary tools and real local FAQ responses and explicitly synthetic provider/error payloads. Synthetic tests do **not** establish live provider quality. A small real Gemini sample and its incomplete/error cases are documented in docs/verification.md. Backboard remains unverified without its key, selected model and storage approval.
+Node tests cover blog content/metadata/link construction, provider failover on quota errors or Gemini HTTP 503, and acceptance scenarios (including the contextual fourth-dimension case), malicious history and links, request limits, streaming, cancellation, timeouts, provider failures, and the standalone function bundle. Browser tests cover mobile/desktop blog routes, section navigation, animation timing, summary tools and real local FAQ responses and explicitly synthetic provider/error payloads. Synthetic tests do **not** establish live provider quality. A small real Gemini sample and its incomplete/error cases are documented in docs/verification.md. Backboard remains unverified without its key, selected model and storage approval.
 
 ## Vercel release reference
 

@@ -47,10 +47,12 @@ export function createFailover(
         }
         return;
       } catch (error) {
-        if (!isQuotaError(error) || signal.aborted) throw error;
-        quotaUntil = now() + 60_000;
-        if (emitted) throw new Error('Response interrupted');
-        if (!fallback) throw error;
+        if (signal.aborted) throw error;
+        const quotaError = isQuotaError(error);
+        if (quotaError) quotaUntil = now() + 60_000;
+        if (quotaError && emitted) throw new Error('Response interrupted');
+        const unavailable = (error as { status?: unknown })?.status === 503;
+        if (!fallback || emitted || (!quotaError && !unavailable)) throw error;
       }
     }
     if (signal.aborted) return;

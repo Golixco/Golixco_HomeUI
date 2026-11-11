@@ -109,7 +109,7 @@ test('retry replaces the failed answer in place and New chat resets', async ({ p
   await expect(page.getByRole('log')).toContainText('Response interrupted');
   await page.getByRole('button', { name: 'Retry response' }).click();
   await expect(page.getByRole('log')).toContainText('Recovered');
-  await expect(page.getByRole('log').getByText('What is Golixco?', { exact: true })).toHaveCount(1);
+  await expect(page.getByRole('log').getByText('You:', { exact: true })).toHaveCount(1);
   await expect(page.getByRole('alert')).toHaveCount(0);
   await page.getByRole('button', { name: 'New chat' }).click();
   await expect(page.getByRole('log')).toHaveCount(0);

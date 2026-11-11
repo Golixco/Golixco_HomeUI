@@ -23,17 +23,23 @@ await once(server, 'listening');
 const original = process.cwd();
 try {
   process.chdir('/tmp');
-  const response = await fetch(`http://127.0.0.1:${server.address().port}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: 'What is Golixco?' }),
-  });
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get('content-type'), /text\/event-stream/);
-  const body = await response.text();
-  assert.match(body, /"source":"knowledge"/);
-  assert.match(body, /"type":"done"/);
-  assert.doesNotMatch(body, /"type":"error"/);
+  for (const [message, expected] of [
+    ['hi', /Hi! Ask me about Golixco/],
+    ['What is Golixco?', /builds software/],
+  ]) {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, history: [] }),
+    });
+    assert.equal(response.status, 200, message);
+    assert.match(response.headers.get('content-type'), /text\/event-stream/);
+    const body = await response.text();
+    assert.match(body, /"source":"knowledge"/);
+    assert.match(body, expected);
+    assert.match(body, /"type":"done"/);
+    assert.doesNotMatch(body, /"type":"error"/);
+  }
   console.log(
     'Actual Vercel JavaScript artifact imports and serves curated SSE outside the source-tree cwd.',
   );

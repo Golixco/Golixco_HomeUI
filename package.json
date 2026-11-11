@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "test:ui": "playwright test",
-    "test:vercel": "node scripts/check-vercel-function.mjs"
+    "test:vercel": "node scripts/check-vercel-function.mjs",
+    "smoke:production": "node scripts/smoke-production-chat.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

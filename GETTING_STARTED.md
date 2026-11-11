@@ -28,7 +28,7 @@ Golixco builds useful software and products through AI, creativity and experimen
 
 The company site is live at [golixco.com](https://golixco.com). [Lolixco](https://lol.golixco.com/) is its separate live public-beta product for cinematic edit discovery and experimental Creator Studio analysis. This repository describes that product and links to it; it is **not the full Lolixco application**. Approved product routes, contacts and social destinations come from [shared/official.ts](shared/official.ts), used by both UI and assistant. Do not replace these with guessed destinations or personal accounts.
 
-Public documents are `/`, `/blog`, `/blog/the-golixco-blog` and `/blog/the-lol-product-lolixco`. The repository lives at [Golixco/Golixco_HomeUI](https://github.com/Golixco/Golixco_HomeUI). PRs #1 and #2 are merged. Read-only Vercel inspection during this snapshot still resolved production to the earlier deployment predating PR #2. **Merged source and deployed code differ.** The owner-controlled operations record holds exact deployment locators. Do not assume the new OG image, analytics or latest chat repair is already live simply because it is in `main`.
+Public documents are `/`, `/blog`, `/blog/the-golixco-blog` and `/blog/the-lol-product-lolixco`. The repository lives at [Golixco/Golixco_HomeUI](https://github.com/Golixco/Golixco_HomeUI). Compare the deployed commit with `origin/main` and run the production smoke test after a release. The [Vercel operations](#vercel-operations) section documents the release workflow.
 
 Evidence labels used here: **repository** means inspected source; **runtime** means fresh read-only service inspection; **historical** means earlier recorded verification; **unknown** requires owner evidence. No new provider generation, deployment, credential change or DNS change was performed for this documentation task.
 
@@ -249,16 +249,12 @@ vercel logs runtime --environment production --since 10m --limit 20 --json
 
 `vercel login` changes local authentication. `vercel link --project PROJECT_NAME --scope APPROVED_SCOPE` changes local project linkage; confirm the existing target before accepting prompts. `.vercel/` is ignored. Do not use secret export commands to populate documentation. Project defaults may be overridden by checked-in `vercel.json`; inspect resolved build output before drawing conclusions.
 
-The following workflow is a **runbook, not authorization to execute**:
+The Vercel GitHub integration creates Previews for pushes to repository branches and deploys pushes and merges to `main` to Production. The Vercel status on the GitHub commit and the deployment's commit SHA identify which revision was built. Vercel requires authorization for fork Previews.
 
-1. Branch from current `main`, implement the smallest scoped change and run relevant checks.
-2. Commit/push and open a PR. Obtain review; do not push to main directly.
-3. With task-authorized Preview access: `vercel build --target=preview`, then `npm run test:vercel`, and `vercel deploy --environment preview` to the existing linked project. Deployment changes cloud state and requires appropriate authorization.
-4. Verify direct routes, refresh, 404s, first paint, mobile UI, curated/model streams, cancellation and environment scope. A protected Preview's noindex/authentication is intentional. `vercel curl / --deployment DEPLOYMENT_URL` can create a project automation-bypass secret; obtain appropriate authorization before this side effect and never publish bypass values/URLs.
-5. After owner release approval and reviewed merge: build a clean approved main checkout. `vercel deploy --prod --skip-domain` stages a Production-environment deployment without assigning production domains. Verify it, then `vercel promote DEPLOYMENT_URL` only with explicit approval. Alternatively owner can authorize `vercel deploy --prod` directly.
-6. Monitor, retain prior deployment references, and verify public pages/assets/API/analytics. Preview environment settings do not automatically become Production settings through promotion.
-
-**Git-triggered deployment is disabled** by `git.deploymentEnabled:false`. A push or merge is not a production deployment. Compare `git rev-parse origin/main` with deployment metadata/build commit information; if absent, compare build outputs and ask owner for the approved release record. Do not infer deployed SHA from the current branch name.
+1. Branch from current `main`, run relevant checks, then push and open a PR. Use an author email GitHub associates with the `Golixco` account. Check attribution before committing with `git config --get user.name` and `git config --get user.email`. Keep private email addresses out of PRs.
+2. Verify the branch deployment with `vercel list --environment preview --meta githubCommitSha="$(git rev-parse HEAD)"`. If the Git deployment was skipped or is missing, run `npx vercel deploy --yes` from the clean branch checkout in the linked project. Include the ready Preview URL in the PR summary. Keep Preview protection enabled.
+3. After a merge or direct push to `main`, verify the Vercel status on that commit and use `vercel inspect https://golixco.com` to confirm the live deployment. Compare its Git SHA with `origin/main`. If Git did not start a build, update a clean checkout to the latest `origin/main` and immediately run `npx vercel deploy --prod --yes` from that checkout. Check the existing Git deployment first to avoid racing two Production releases.
+4. After `golixco.com` points to the new deployment, run `npm run smoke:production`. It checks the canonical chat endpoint for HTTP 200 and a complete greeting stream without using model quota.
 
 Rollback is production-changing and needs explicit owner approval. Confirm a genuinely known-good deployment and configuration, then use `vercel rollback DEPLOYMENT_URL` per [current rollback documentation](https://vercel.com/docs/cli/rollback). Inspect the result and public behavior; never choose “previous” blindly. Rollback eligibility and promotion behavior depend on project/plan. Capture status and recovery references without secrets. Shared Firewall rules, billing/plan eligibility and spend limits require owner verification; instance rate limits do not replace them.
 
@@ -306,7 +302,7 @@ Indexable means technically eligible; submitted means a sitemap or request was s
 
 `src/main.tsx` calls `startAnalytics()` once outside StrictMode before hydration. Official `@vercel/analytics` injects only for production builds on canonical origins, permits only four public page paths, removes query/hash and rejects custom events. Ordinary full document links and SDK history tracking avoid additional manual pageview calls. Strict-origin referrer policy limits outgoing referring URLs; CSP permits same-origin insights resources. No chat text or keys are event properties. Preview/local visits do not enter the live dashboard.
 
-Verify production collection only after the matching release: visit approved public pages without a blocker, inspect successful same-origin `/_vercel/insights/script.js` and `/view` requests, then check Vercel Web Analytics date/path filters. Dashboard enablement is not proof of received traffic. Function logs diagnose requests, build logs diagnose compilation, Analytics measures visits and provider dashboards measure inference/quota/cost. These are different evidence sources. Production collection of merged code remains unverified while the older deployment is live.
+Verify production collection only after the matching release: visit approved public pages without a blocker, inspect successful same-origin `/_vercel/insights/script.js` and `/view` requests, then check Vercel Web Analytics date/path filters. Dashboard enablement is not proof of received traffic. Function logs diagnose requests, build logs diagnose compilation, Analytics measures visits and provider dashboards measure inference/quota/cost. These are different evidence sources. Confirm the deployed commit before checking collection.
 
 ## Testing
 
@@ -362,7 +358,7 @@ For machine recovery, clone clean main, restore tools, obtain minimum scoped acc
 
 Inspect before editing; branch and PR rather than changing main/production. Preserve public knowledge, leadership privacy, brand licenses and architecture. Credentials existing in a CLI do not confer authority. Keep prompts/history/IPs out of unnecessary analytics/logging. Never expose secret values in shell output, code, docs, screenshots, generated files, issues or PRs; provision access through owner-approved secret management.
 
-Owner approval is required for production deploy/promotion/rollback, credentials/approval changes, paid services/quotas/billing, DNS/mail configuration and separate Lolixco/AWS resources. Preview cloud changes require task authorization. Source read, bounded local checks and authorized PR creation need only task-appropriate repository access. Do not purchase plans or weaken safeguards to make a demo pass. Report unknowns and discrepancies instead of inventing account facts.
+The release workflow above covers deployments from `main`. Ask the owner before rollback, credential or approval changes, paid services or quota changes, DNS or mail configuration, and separate Lolixco/AWS resources. Preview cloud changes require task authorization. Source read, bounded local checks and authorized PR creation need only task-appropriate repository access. Do not purchase plans or weaken safeguards to make a demo pass. Report unknowns and discrepancies instead of inventing account facts.
 
 ## If You Are a New AI Agent, Start Here
 

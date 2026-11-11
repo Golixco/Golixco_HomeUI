@@ -6,7 +6,7 @@
 
 Golixco’s company website is live at [golixco.com](https://golixco.com), with a prerendered blog, a guarded company assistant and links to [Lolixco’s separate public beta](https://lol.golixco.com/).
 
-The onboarding guide is the current architecture, setup, security and operations reference. Earlier mission documents record historical preparation; their “not deployed” statements do not describe today's public website. Merged `main` and the active production deployment can differ because Git-triggered Vercel deployment is disabled. See the guide for the verified snapshot and owner-approved release workflow.
+The onboarding guide is the current architecture, setup, security and operations reference. Earlier mission documents record historical preparation; their “not deployed” statements do not describe today's public website. Vercel builds Preview deployments for branch pushes and deploys `main` to `golixco.com`. See the [release workflow](GETTING_STARTED.md#vercel-operations) for CLI deployment and smoke checks.
 
 > The sections below retain earlier implementation reference notes. For current provider verification, publication dates, source/runtime differences and release status, use GETTING_STARTED.md; historical pending checks are not current account-state claims.
 
@@ -91,12 +91,12 @@ npm audit
 
 Node tests cover blog content/metadata/link construction, quota-only provider failover, and the 24 acceptance scenarios (including the contextual fourth-dimension case), malicious history and links, request limits, streaming, cancellation, timeouts, provider failures, and the standalone function bundle. Browser tests cover mobile/desktop blog routes, section navigation, animation timing, summary tools and real local FAQ responses and explicitly synthetic provider/error payloads. Synthetic tests do **not** establish live provider quality. A small real Gemini sample and its incomplete/error cases are documented in docs/verification.md. Backboard remains unverified without its key, selected model and storage approval.
 
-## Vercel release reference — owner authorization required
+## Vercel release reference
 
 Use the Vite preset, root of this repository, Node 24.x, `npm ci`, `npm run build`, and output directory `dist`. `api/chat.ts` runs as a Node function with a 45-second maximum. `vercel.json` supplies security headers/CSP, static caching, and API no-store behavior. Source maps are not published. The function’s statically imported knowledge is validated by an isolated bundle test. Valid blog routes are emitted as directory index HTML and use clean URLs. Unknown paths have a real HTTP 404 and branded fallback; no blanket rewrite captures API calls or missing assets.
 
 Set server-side `GEMINI_API_KEY` and `GEMINI_MODEL` in the intended Vercel environment. Configure shared edge rate limiting and provider quotas before exposing the API. Smoke-test actual function streaming, missing assets, canonical domain, origin handling and error responses on an authorized preview before production.
 
-**Git-triggered Vercel deployment is disabled** with `git.deploymentEnabled: false`, so opening this mission’s PR must not deploy the site. Re-enable only after owner authorization. The frontend bundle contains no Gemini SDK, server knowledge or API key. The build prerenders all four public routes with unique metadata, structured data, RSS and sitemap; article publication dates are recorded in the article model.
+See the [release workflow](GETTING_STARTED.md#vercel-operations) for Git deployments, CLI recovery, and post-release chat verification. The frontend bundle contains no Gemini SDK, server knowledge or API key. The build prerenders all four public routes with unique metadata, structured data, RSS and sitemap; article publication dates are recorded in the article model.
 
 Vercel’s [Hobby rules](https://vercel.com/docs/plans/hobby) restrict that plan to non-commercial personal use. This official company website should use an eligible commercial plan, normally **Pro**; the owner must choose/authorize the plan. No subscription or purchase has been made. The canonical URL is `https://golixco.com/`; inspect existing domain attachment and redirects before any authorized release. Do not change Cloudflare DNS, mail routing, `lol.golixco.com`, CloudFront, ACM or AWS resources as part of this local mission.

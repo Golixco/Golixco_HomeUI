@@ -351,22 +351,20 @@ export function InfiniteSocialConveyor() {
           </div>
         </div>
       </div>
-      <details className="max-w-3xl mx-auto px-6 mt-6 text-center text-sm text-white/55">
-        <summary className="cursor-pointer hover:text-white p-3">All official destinations</summary>
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 pt-3">
-          {socials.map((item) => (
-            <a
-              key={item.name}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 underline underline-offset-4 hover:text-white"
-            >
-              {item.name}
-            </a>
-          ))}
-        </div>
-      </details>
+      <div className="sr-only focus-within:not-sr-only focus-within:flex focus-within:flex-wrap focus-within:justify-center">
+        {[...topRow, ...bottomRow].map((item) => (
+          <a
+            key={item.name}
+            href={item.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 p-3 text-white"
+          >
+            <span aria-hidden="true" className="h-5 w-5">{item.icon}</span>
+            {item.name}
+          </a>
+        ))}
+      </div>
     </section>
   );
 }

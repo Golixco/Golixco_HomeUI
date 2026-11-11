@@ -50,8 +50,12 @@ for (const width of [320, 390, 768, 1440])
     await expect(
       page.getByRole('textbox', { name: 'Newsletter email signup — coming soon' }),
     ).toBeDisabled();
-    await page.getByText('All official destinations', { exact: true }).click();
-    await expect(page.locator('details a')).toHaveCount(11);
+    const socials = page.locator('#stay-in-touch');
+    await expect(socials.getByText('All official destinations', { exact: true })).toHaveCount(0);
+    await expect(socials.getByRole('link')).toHaveCount(12);
+    const github = socials.getByRole('link', { name: 'GitHub', exact: true });
+    await github.focus();
+    await expect(github).toBeInViewport();
     expect(
       await page.locator('a[href*="substack"],a[href*="join.slack"],a[href*="blogs."]').count(),
     ).toBe(0);
@@ -134,8 +138,8 @@ test('Stop keeps input usable', async ({ page }) => {
 test('reduced motion and real HTTP 404', async ({ page, request }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  await page.locator('#stay-in-touch').scrollIntoViewIfNeeded();
   await expect(page.locator('#stay-in-touch a[tabindex="-1"]')).toHaveCount(12);
+  await page.locator('#stay-in-touch').scrollIntoViewIfNeeded();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const response = await page.goto('/missing-page');
   expect(response?.status()).toBe(404);

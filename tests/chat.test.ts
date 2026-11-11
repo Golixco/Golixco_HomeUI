@@ -20,6 +20,10 @@ import { safeOfficialLink, socials } from '../shared/official.ts';
 const acceptance: [string, RegExp][] = [
   ['What is Golixco?', /builds software.*Lolixco/s],
   ['the ai used on lolixco?', /local media-signal analysis.*Gemini/],
+  [
+    'Compare Lolixco’s Immersion mode and Creator Studio in detail.',
+    /Immersion.*watching edits.*\/immersion.*Creator Studio.*analyzing edits.*\/creator-studio/s,
+  ],
   ['yo', /Hi!/],
   ['bye', /See you!/],
   ['What is Lolixco?', /live public.beta.*cinematic/s],
@@ -275,6 +279,28 @@ test('HTTP quota fallback completes and truncated Gemini output stays out of the
     } finally {
       await f.close();
     }
+  }
+});
+test('provider content stop gives a clear error without showing partial text or triggering fallback', async () => {
+  let fallbackCalls = 0;
+  const f = await fixture({
+    provider: createGemini(async () => new Response(
+      'data: {"candidates":[{"content":{"parts":[{"text":"Unfinished fragment"}]}}]}\n\n' +
+      'data: {"candidates":[{"finishReason":"PROHIBITED_CONTENT"}]}\n\n',
+    )),
+    fallbackProvider: async function* () {
+      fallbackCalls++;
+      yield 'Fallback answer';
+    },
+  });
+  try {
+    const response = await fetch(f.url, { method: 'POST', headers, body: complex });
+    const body = await response.text();
+    assert.match(body, /"type":"error".*more specific question/);
+    assert.doesNotMatch(body, /Unfinished fragment|Fallback answer|"type":"done"/);
+    assert.equal(fallbackCalls, 0);
+  } finally {
+    await f.close();
   }
 });
 test('provider quota, internal errors and timeout use safe SSE errors', async () => {

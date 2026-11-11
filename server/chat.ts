@@ -349,6 +349,12 @@ export function createChatHandler(
     } catch (error: unknown) {
       if (res.destroyed || res.writableEnded) return;
       const providerStatus = Number((error as { status?: number })?.status);
+      const finishReason = (error as { finishReason?: string })?.finishReason;
+      const contentStopped =
+        finishReason === 'PROHIBITED_CONTENT' ||
+        finishReason === 'SAFETY' ||
+        finishReason === 'BLOCKLIST' ||
+        finishReason === 'SPII';
       const status =
         error instanceof RequestError
           ? error.status
@@ -360,7 +366,9 @@ export function createChatHandler(
           ? error.message
           : status === 429
             ? 'The assistant has reached its provider quota. Please try again later.'
-            : 'The assistant is temporarily unavailable. Please try again or contact hello@golixco.com.';
+            : contentStopped
+              ? 'The assistant couldn’t complete that answer. Try asking a more specific question about Golixco or Lolixco.'
+              : 'The assistant is temporarily unavailable. Please try again or contact hello@golixco.com.';
       // Never log provider bodies, prompts, keys, history, or private configuration.
       const category =
         status === 504
@@ -377,16 +385,17 @@ export function createChatHandler(
                     ? 'provider_request_rejected'
                     : error instanceof TypeError
                       ? 'provider_network'
-                      : error instanceof Error &&
-                          error.message === 'Provider response interrupted'
-                        ? 'provider_interrupted'
-                        : 'provider_failure';
+                      : contentStopped
+                        ? 'provider_content_stopped'
+                        : error instanceof Error && error.message === 'Provider response interrupted'
+                          ? 'provider_interrupted'
+                          : 'provider_failure';
       if (res.headersSent) {
         diagnose(
           category,
           status,
           providerStatus,
-          (error as { finishReason?: string })?.finishReason,
+          finishReason,
           error as {
             packets?: number;
             hasCandidates?: boolean;

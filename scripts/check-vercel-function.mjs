@@ -27,6 +27,7 @@ try {
     ['hi', /Hi! Ask me about Golixco/],
     ['the ai used on lolixco?', /local media-signal analysis.*Gemini/],
     ['What is Golixco?', /builds software/],
+    ['Compare Lolixco’s Immersion mode and Creator Studio in detail.', /Immersion.*watching edits.*Creator Studio.*analyzing edits/],
   ]) {
     const response = await fetch(`http://127.0.0.1:${server.address().port}`, {
       method: 'POST',

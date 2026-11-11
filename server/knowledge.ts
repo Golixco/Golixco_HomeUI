@@ -107,6 +107,18 @@ export function getLocalAnswer(message: string, history: ChatMessage[] = []): st
   if (/newsletter|subscrib/.test(text))
     return 'Newsletter signup is coming soon. Subscription storage is not connected yet, so no email is saved or subscribed through this homepage.';
   if (
+    /\bimmersion\b/.test(text) &&
+    /\bcreator studio\b/.test(text) &&
+    /\b(compare|contrast|versus|vs|difference|different|in detail)\b/.test(text)
+  )
+    return [
+      '**Immersion** is for watching edits. It gives you a focused viewing experience when you want to enjoy an edit. ' +
+        link('Open Immersion', productLinks.immersion) + '.',
+      '**Creator Studio** is for analyzing edits. Submit a compatible local video or an eligible YouTube URL for experimental feedback on dimensions such as beat synchronization, cuts, and visual craftsmanship. Some analyses return partial feedback. ' +
+        link('Open Creator Studio', productLinks.studio) + '.',
+      'Use Immersion to watch an edit and Creator Studio to understand how an edit is put together.',
+    ].join('\n\n');
+  if (
     /compare|in detail|detailed|walk me through|difference between/.test(text) &&
     isCompanyRelated(message, history)
   )

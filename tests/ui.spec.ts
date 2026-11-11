@@ -138,8 +138,8 @@ test('Stop keeps input usable', async ({ page }) => {
 test('reduced motion and real HTTP 404', async ({ page, request }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  await page.locator('#stay-in-touch').scrollIntoViewIfNeeded();
   await expect(page.locator('#stay-in-touch a[tabindex="-1"]')).toHaveCount(12);
+  await page.locator('#stay-in-touch').scrollIntoViewIfNeeded();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const response = await page.goto('/missing-page');
   expect(response?.status()).toBe(404);

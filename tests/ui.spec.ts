@@ -87,7 +87,7 @@ test('safe Markdown and unsafe model links', async ({ page }) => {
   await expect(page.getByRole('log').locator('script,img')).toHaveCount(0);
   expect(await page.evaluate(() => 'pwned' in window)).toBe(false);
 });
-test('partial stream errors stay out of future history and New chat resets', async ({ page }) => {
+test('retry replaces the failed answer in place and New chat resets', async ({ page }) => {
   let requests = 0;
   await page.route('**/api/chat', async (r) => {
     requests++;
@@ -97,12 +97,7 @@ test('partial stream errors stay out of future history and New chat resets', asy
         body: 'data: {"type":"delta","text":"Partial answer"}\n\ndata: {"type":"error","error":"Provider quota reached. Try later."}\n\n',
       });
     else {
-      expect(
-        r
-          .request()
-          .postDataJSON()
-          .history.some((m: { text: string }) => m.text === 'Partial answer'),
-      ).toBe(false);
+      expect(r.request().postDataJSON()).toEqual({ message: 'What is Golixco?', history: [] });
       await r.fulfill({ contentType: 'text/event-stream', body: events('Recovered') });
     }
   });
@@ -112,9 +107,10 @@ test('partial stream errors stay out of future history and New chat resets', asy
   await input.press('Enter');
   await expect(page.getByRole('alert')).toContainText('Provider quota');
   await expect(page.getByRole('log')).toContainText('Response interrupted');
-  await input.fill('What is Lolixco?');
-  await input.press('Enter');
+  await page.getByRole('button', { name: 'Retry response' }).click();
   await expect(page.getByRole('log')).toContainText('Recovered');
+  await expect(page.getByRole('log').getByText('You:', { exact: true })).toHaveCount(1);
+  await expect(page.getByRole('alert')).toHaveCount(0);
   await page.getByRole('button', { name: 'New chat' }).click();
   await expect(page.getByRole('log')).toHaveCount(0);
   await expect(input).toBeFocused();

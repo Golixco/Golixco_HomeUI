@@ -14,10 +14,14 @@ import {
   PRIVATE,
   REDIRECT,
 } from '../server/knowledge.ts';
+import { createGemini } from '../server/gemini.ts';
 import { safeOfficialLink, socials } from '../shared/official.ts';
 
 const acceptance: [string, RegExp][] = [
   ['What is Golixco?', /builds software.*Lolixco/s],
+  ['the ai used on lolixco?', /local media-signal analysis.*Gemini/],
+  ['yo', /Hi!/],
+  ['bye', /See you!/],
   ['What is Lolixco?', /live public.beta.*cinematic/s],
   ['Is Lolixco live?', /Yes.*live in public beta/s],
   ['Who owns Lolixco?', /product under.*Golixco/s],
@@ -215,7 +219,7 @@ test('HTTP checks method, origin, malformed JSON, private errors and limits', as
     await f.close();
   }
 });
-test('provider streaming delivers first delta before completion', async () => {
+test('provider reply is delivered only after the whole answer completes', async () => {
   let release!: () => void;
   const hold = new Promise<void>((resolve) => {
     release = resolve;
@@ -231,8 +235,8 @@ test('provider streaming delivers first delta before completion', async () => {
     const r = await fetch(f.url, { method: 'POST', headers, body: complex });
     const reader = r.body!.getReader();
     const first = new TextDecoder().decode((await reader.read()).value);
-    assert.match(first, /First/);
-    assert.doesNotMatch(first, /second|"done"/);
+    assert.match(first, /"type":"start"/);
+    assert.doesNotMatch(first, /First|second|"done"/);
     release();
     let rest = '';
     for (;;) {
@@ -240,11 +244,37 @@ test('provider streaming delivers first delta before completion', async () => {
       if (done) break;
       rest += new TextDecoder().decode(value);
     }
-    assert.match(rest, /second/);
+    assert.match(rest, /First second/);
     assert.match(rest, /"done"/);
   } finally {
     release();
     await f.close();
+  }
+});
+test('HTTP quota fallback completes and truncated Gemini output stays out of the reply', async () => {
+  for (const [upstream, expectFallback] of [
+    [{ error: { status: 'RESOURCE_EXHAUSTED' } }, true],
+    [{ candidates: [{ content: { parts: [{ text: 'Unfinished fragment' }] } }] }, false],
+  ] as const) {
+    const f = await fixture({
+      provider: createGemini(async () => new Response(`data: ${JSON.stringify(upstream)}\n\n`)),
+      fallbackProvider: async function* () { yield 'Complete fallback answer'; },
+    });
+    try {
+      const r = await fetch(f.url, { method: 'POST', headers, body: complex });
+      const body = await r.text();
+      assert.equal(r.status, 200);
+      if (expectFallback) {
+        assert.match(body, /Complete fallback answer/);
+        assert.match(body, /"type":"done"/);
+        assert.doesNotMatch(body, /"type":"error"/);
+      } else {
+        assert.match(body, /"type":"error"/);
+        assert.doesNotMatch(body, /Unfinished fragment|Complete fallback answer|"type":"done"/);
+      }
+    } finally {
+      await f.close();
+    }
   }
 });
 test('provider quota, internal errors and timeout use safe SSE errors', async () => {

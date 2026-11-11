@@ -27,7 +27,12 @@ export function createFailover(
   now = Date.now,
 ) {
   let quotaUntil = 0;
-  return async function* (message: string, history: ChatMessage[], signal: AbortSignal) {
+  return async function* (
+    message: string,
+    history: ChatMessage[],
+    signal: AbortSignal,
+    onFallback?: () => void,
+  ) {
     let emitted = false;
     if (now() < quotaUntil && !fallback) throw { status: 429 };
     if (now() >= quotaUntil) {
@@ -50,6 +55,7 @@ export function createFailover(
     }
     if (signal.aborted) return;
     attempt();
+    onFallback?.();
     yield* fallback!(message, history, signal);
   };
 }

@@ -60,8 +60,9 @@ export function getLocalAnswer(message: string, history: ChatMessage[] = []): st
   )
     return PRIVATE;
   if (/david goggins|capital of|celebrity|president of|weather in/.test(text)) return REDIRECT;
-  if (/^(hi|hello|hey)[!.\s]*$/.test(text))
+  if (/^(hi|hello|hey|yo)[!.\s]*$/.test(text))
     return 'Hi! Ask me about Golixco, explore Lolixco, or find out what Creator Studio can do.';
+  if (/^(bye|goodbye|see you|see ya)[!.\s]*$/.test(text)) return "See you!";
   if (/^(thanks|thank you)[!.\s]*$/.test(text)) return "You're welcome!";
   if (/copyright|content.rights|\brights\b|takedown|removal|remove.*(video|content)/.test(text))
     return `For copyright, content-rights or removal enquiries, email ${email(contacts.rights)}.`;
@@ -112,7 +113,11 @@ export function getLocalAnswer(message: string, history: ChatMessage[] = []): st
     return undefined;
   if (/technolog|tech stack|framework|built with/.test(text) && isCompanyRelated(message, history))
     return 'The Golixco homepage uses React, TypeScript, Vite, Tailwind CSS and Motion, with Gemini reached through a server-side API. Lolixco’s Creator Studio combines local media-signal analysis with Gemini-supported semantic understanding where available.';
-  if (/how.*(lolixco.*ai|ai.*(work|analy)|analy.*work)/.test(text))
+  if (
+    /how.*(lolixco.*ai|ai.*(work|analy)|analy.*work)/.test(text) ||
+    (/\b(lolixco|creator studio)\b/.test(text) &&
+      /\b(ai|model)\b.*\b(us(e[ds]?|ing)|powers?)\b|\b(uses?|using|powers?)\b.*\b(ai|model)\b/.test(text))
+  )
     return 'Lolixco’s Creator Studio combines local media-signal analysis with Gemini-supported semantic understanding where available. It provides experimental, evidence-based feedback across six dimensions; supported partial feedback may still be available when semantic inference is unavailable.';
   const feature = Object.entries(knowledge.lolixco.live_features).find(
     ([name]) =>

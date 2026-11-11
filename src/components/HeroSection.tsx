@@ -18,7 +18,7 @@ const ReactMarkdown = lazy(() => import('react-markdown'));
 interface Message {
   role: 'user' | 'bot';
   text: string;
-  failed?: boolean;
+  failure?: string;
 }
 const questions = [
   { label: 'What is Golixco?', question: 'What is Golixco?', icon: Sparkles },
@@ -28,12 +28,12 @@ const questions = [
 ];
 
 export function HeroSection() {
+  const [chatReady, setChatReady] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState('');
-  const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -45,31 +45,34 @@ export function HeroSection() {
   useEffect(() => {
     if (chatRef.current && followScroll.current)
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  }, [messages, isLoading, error]);
-  useEffect(() => () => abortRef.current?.abort(), []);
+  }, [messages, isLoading]);
+  useEffect(() => {
+    setChatReady(true);
+    return () => abortRef.current?.abort();
+  }, []);
 
-  const handleSend = async (text = inputValue) => {
+  const handleSend = async (text = inputValue, retry = false) => {
     if (!text.trim() || text.length > 1200 || loadingRef.current) return;
     loadingRef.current = true;
     const controller = new AbortController();
     abortRef.current = controller;
     const userMessage = text.trim();
-    const history = messages
-      .filter((m) => !m.failed && m.text)
+    const prior = retry ? messages.slice(0, -2) : messages;
+    const history = prior
+      .filter((m, i) => m.text && !m.failure && (m.role !== 'user' || !prior[i + 1]?.failure))
       .slice(-8)
       .map(({ role, text }) => ({ role, text: text.slice(0, 2000) }));
     // Retain a small request context; the visible conversation can be longer.
     while (history.reduce((n, m) => n + m.text.length, userMessage.length) > 10_000)
       history.shift();
-    const botIndex = messages.length + 1;
-    setMessages((prev) => [
-      ...prev,
+    const botIndex = prior.length + 1;
+    setMessages([
+      ...prior,
       { role: 'user', text: userMessage },
       { role: 'bot', text: '' },
     ]);
-    setInputValue('');
+    if (!retry) setInputValue('');
     setIsLoading(true);
-    setError('');
     setStatus('Thinking…');
     followScroll.current = true;
     let finished = false;
@@ -140,9 +143,8 @@ export function HeroSection() {
         : err instanceof Error
           ? err.message
           : 'Connection interrupted. Please try again.';
-      setError(message);
       setStatus(message);
-      setMessages((prev) => prev.map((m, i) => (i === botIndex ? { ...m, failed: true } : m)));
+      setMessages((prev) => prev.map((m, i) => (i === botIndex ? { ...m, failure: message } : m)));
     } finally {
       clearTimeout(timer);
       setIsLoading(false);
@@ -152,7 +154,6 @@ export function HeroSection() {
   };
   const clearChat = () => {
     setMessages([]);
-    setError('');
     setStatus('Conversation cleared');
     inputRef.current?.focus();
   };
@@ -191,6 +192,7 @@ export function HeroSection() {
               id="company-question"
               type="text"
               autoComplete="off"
+              disabled={!chatReady}
               maxLength={1200}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
@@ -211,7 +213,7 @@ export function HeroSection() {
             ) : (
               <button
                 type="submit"
-                disabled={!inputValue.trim()}
+                disabled={!chatReady || !inputValue.trim()}
                 aria-label="Send question"
                 className="absolute right-3 p-3 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl transition-colors"
               >
@@ -226,6 +228,7 @@ export function HeroSection() {
             {questions.map(({ label, question, icon: Icon }) => (
               <button
                 key={label}
+                disabled={!chatReady}
                 onClick={() => {
                   setInputValue(question);
                   inputRef.current?.focus();
@@ -269,7 +272,7 @@ export function HeroSection() {
               }}
             >
               {messages.map((msg, idx) =>
-                msg.text || (isLoading && idx === messages.length - 1) ? (
+                msg.text || msg.failure || (isLoading && idx === messages.length - 1) ? (
                   <motion.div
                     key={idx}
                     initial={{ opacity: 0, y: reduced ? 0 : 6 }}
@@ -282,14 +285,14 @@ export function HeroSection() {
                       <span className="sr-only">
                         {msg.role === 'user' ? 'You: ' : 'Golixco assistant: '}
                       </span>
-                      {!msg.text ? (
+                      {!msg.text && !msg.failure ? (
                         <span className="flex items-center gap-2 text-white/50">
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           Thinking…
                         </span>
                       ) : msg.role === 'user' ? (
                         msg.text
-                      ) : (
+                      ) : msg.text && (
                         <Suspense
                           fallback={<span className="whitespace-pre-wrap">{msg.text}</span>}
                         >
@@ -316,22 +319,26 @@ export function HeroSection() {
                           </ReactMarkdown>
                         </Suspense>
                       )}
-                      {msg.failed && msg.text && (
-                        <p className="text-xs text-white/45 mt-3">Response interrupted</p>
+                      {msg.failure && (
+                        <div className={msg.text ? 'mt-3' : undefined}>
+                          {msg.text && <p className="text-xs text-white/55">Response interrupted</p>}
+                          <p role="alert">{msg.failure}</p>
+                          {idx === messages.length - 1 && (
+                            <button
+                              type="button"
+                              className="mt-2 underline underline-offset-4"
+                              onClick={() => void handleSend(messages[idx - 1].text, true)}
+                            >
+                              Retry response
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </motion.div>
                 ) : null,
               )}
             </div>
-            {error && (
-              <p
-                role="alert"
-                className="text-sm text-white/65 border border-white/10 rounded-xl p-3 mt-3"
-              >
-                {error}
-              </p>
-            )}
             {isLoading && (
               <p aria-hidden="true" className="text-xs text-white/45 mt-3">
                 {status}{' '}

@@ -209,7 +209,7 @@ data: {"type":"done"}
 
 ```
 
-Model starts use source `gemini`; an internal fallback does not make that field proof of the final provider. Errors before streaming use JSON/status codes; after headers, an SSE `error` event can occur even with HTTP 200. Heartbeats are comments. Frontend must preserve partial-error state rather than treating EOF as success. Safe request IDs/categories support correlation without logging message text. Hosted origins include canonical sites and the exact deployment hostname; local allowed ports are defined in `server/chat.ts`. Origin validation is not authentication, and non-browser clients can call the endpoint. Configure shared edge protections and provider-side caps separately with owner approval.
+Model starts use source `gemini`. The handler sends a complete reply in one delta after the provider finishes, then sends `done`. The `backboard_complete` log category records a successful fallback. Errors before streaming use JSON/status codes; after headers, an SSE `error` event can occur even with HTTP 200. Heartbeats are comments. The frontend keeps errors with the question and lets the user retry the latest failed reply. Safe request IDs/categories support correlation without logging message text. Hosted origins include canonical sites and the exact deployment hostname; local allowed ports are defined in `server/chat.ts`. Origin validation is not authentication, and non-browser clients can call the endpoint. Configure shared edge protections and provider-side caps separately with owner approval.
 
 ### Debugging decision tree
 

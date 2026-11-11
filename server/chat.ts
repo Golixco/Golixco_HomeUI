@@ -298,9 +298,9 @@ export function createChatHandler(
       res.setHeader('X-Accel-Buffering', 'no');
       res.flushHeaders();
       event({ type: 'start', source: localAnswer ? 'knowledge' : 'gemini' });
-      if (localAnswer) {
-        event({ type: 'delta', text: localAnswer });
-      } else {
+      let answer = localAnswer;
+      let usedFallback = false;
+      if (!answer) {
         // Promise.race enforces the deadline even if a transport ignores abort.
         const timeout = new Promise<never>((_, reject) => {
           timer = setTimeout(() => {
@@ -316,29 +316,34 @@ export function createChatHandler(
         heartbeat = setInterval(() => {
           if (!res.destroyed) res.write(': waiting\n\n');
         }, 5000);
-        let chars = 0;
         const consume = async () => {
-          for await (const text of routedProvider(
+          let text = '';
+          for await (const chunk of routedProvider(
             message,
             history,
             controller.signal,
+            () => {
+              usedFallback = true;
+            },
           )) {
-            if (controller.signal.aborted || res.destroyed) break;
-            chars += text.length;
-            if (chars > 12_000) {
-              controller.abort();
-              break;
-            }
-            event({ type: 'delta', text });
+            if (controller.signal.aborted || res.destroyed) return;
+            text += chunk;
+            if (text.length > 12_000)
+              throw new Error('Provider answer exceeded output limit');
           }
-          if (!chars && !controller.signal.aborted)
+          if (!text.trim() && !controller.signal.aborted)
             throw new Error('Empty response');
+          return text;
         };
-        await Promise.race([consume(), timeout]);
+        answer = await Promise.race([consume(), timeout]);
       }
-      if (!controller.signal.aborted) {
+      if (!controller.signal.aborted && answer) {
+        event({ type: 'delta', text: answer });
         event({ type: 'done' });
-        diagnose(localAnswer ? 'curated_complete' : 'model_complete', 200);
+        diagnose(
+          localAnswer ? 'curated_complete' : usedFallback ? 'backboard_complete' : 'model_complete',
+          200,
+        );
       } else diagnose('cancelled', 499);
       res.end();
     } catch (error: unknown) {

@@ -41,7 +41,7 @@
       ]
     },
     "website": "https://golixco.com/",
-    "website_status": "Parent homepage being prepared locally; production launch is pending owner authorization.",
+    "website_status": "The public company homepage is live at golixco.com.",
     "leadership": "Golixco is keeping the identities of the people behind the company private for now. Official leadership details have not been published.",
     "brand": "Official geometric layered G emblem and Golixco wordmark; black-and-white, minimal, pixel-inspired website.",
     "website_technology": [
@@ -90,6 +90,10 @@
     "status": "Live public beta",
     "url": "https://lol.golixco.com/",
     "description": "A cinematic video-edit discovery and AI-assisted edit-analysis platform for people who create and enjoy edits.",
+    "visual_identity": {
+      "accent": "Lolixco’s visual identity pairs a white mark with a warm yellow accent. On Golixco’s homepage, the amber-gold accent highlights the Lolixco product link when hovered or focused, distinguishing it within the company’s black-and-white interface.",
+      "background": "Lolixco uses a dark viewing environment to give bright and detailed footage room to stand out."
+    },
     "content": [
       "Movies",
       "Television series",

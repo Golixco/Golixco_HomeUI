@@ -381,15 +381,17 @@ export function createChatHandler(
                 ? 'provider_access'
                 : providerStatus === 404
                   ? 'provider_model_unavailable'
-                  : providerStatus === 400
-                    ? 'provider_request_rejected'
-                    : error instanceof TypeError
-                      ? 'provider_network'
-                      : contentStopped
-                        ? 'provider_content_stopped'
-                        : error instanceof Error && error.message === 'Provider response interrupted'
-                          ? 'provider_interrupted'
-                          : 'provider_failure';
+                  : providerStatus === 503
+                    ? 'provider_unavailable'
+                    : providerStatus === 400
+                      ? 'provider_request_rejected'
+                      : error instanceof TypeError
+                        ? 'provider_network'
+                        : contentStopped
+                          ? 'provider_content_stopped'
+                          : error instanceof Error && error.message === 'Provider response interrupted'
+                            ? 'provider_interrupted'
+                            : 'provider_failure';
       if (res.headersSent) {
         diagnose(
           category,

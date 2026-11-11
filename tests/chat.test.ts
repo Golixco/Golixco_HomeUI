@@ -255,9 +255,10 @@ test('provider reply is delivered only after the whole answer completes', async 
     await f.close();
   }
 });
-test('HTTP quota fallback completes and truncated Gemini output stays out of the reply', async () => {
+test('HTTP fallback completes for quota and service unavailability and hides truncated Gemini output', async () => {
   for (const [upstream, expectFallback] of [
     [{ error: { status: 'RESOURCE_EXHAUSTED' } }, true],
+    [{ error: { code: 503 } }, true],
     [{ candidates: [{ content: { parts: [{ text: 'Unfinished fragment' }] } }] }, false],
   ] as const) {
     const f = await fixture({

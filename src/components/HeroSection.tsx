@@ -28,7 +28,7 @@ const questions = [
 ];
 
 export function HeroSection() {
-  const [chatReady, setChatReady] = useState(true);
+  const [chatReady, setChatReady] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -162,26 +162,37 @@ export function HeroSection() {
     <section
       id="ask"
       aria-labelledby="hero-heading"
-      className="min-h-[80svh] flex flex-col items-center justify-center pt-32 pb-16 px-4 relative z-10 scroll-mt-24"
+      className="min-h-[85svh] flex flex-col items-center justify-center pt-28 pb-16 px-4 relative z-10 scroll-mt-24 overflow-hidden"
     >
-      <RevealContainer viewportMargin="0px" className="w-full max-w-3xl flex flex-col items-center">
-        <div aria-hidden="true" className="h-4 mb-6" />
+      {/* Background G watermark from reference */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none overflow-hidden"
+      >
+        <span className="font-pixel text-[32rem] sm:text-[40rem] leading-none text-white">G</span>
+      </div>
+
+      <RevealContainer viewportMargin="0px" className="w-full max-w-3xl flex flex-col items-center relative z-10">
         <RevealItem>
-          <h1
-            id="hero-heading"
-            className="text-3xl sm:text-4xl md:text-[clamp(2rem,3.3vw,3rem)] md:whitespace-nowrap font-bold mb-5 tracking-tight text-center text-white leading-[1.15]"
-          >
-            What would you like to know about <span className="sr-only">Golixco?</span>
-          </h1>
+          <div className="text-center mb-6">
+            <h1
+              id="hero-heading"
+              className="font-pixel text-5xl sm:text-6xl md:text-7xl mb-3 tracking-wider text-white"
+            >
+              GolixcoBot
+            </h1>
+            <p className="text-gray-400 text-sm sm:text-base md:text-lg max-w-xl mx-auto">
+              Hi, I am GolixcoBot, Golixco&apos;s AI assistant. Ask me anything about our company, products, Creator Studio, or vision.
+            </p>
+          </div>
         </RevealItem>
-        <div aria-hidden="true" className="h-5 mb-9" />
         <RevealItem className="w-full max-w-2xl">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               void handleSend();
             }}
-            className="relative flex items-center bg-[#0E0E0E] rounded-2xl border border-white/10 focus-within:border-white/35 focus-within:shadow-[0_0_32px_rgba(255,255,255,0.04)] transition-all duration-300"
+            className="relative flex items-center bg-[#1a1a1a] rounded-full border border-white/20 focus-within:border-white/40 focus-within:shadow-[0_0_32px_rgba(255,255,255,0.06)] transition-all duration-300"
           >
             <BrandName paused={!showRotatingName} />
             <label htmlFor="company-question" className="sr-only">
@@ -199,25 +210,25 @@ export function HeroSection() {
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               placeholder={showRotatingName ? '' : 'Ask about Golixco or Lolixco…'}
-              className="w-full min-w-0 bg-transparent text-white pl-5 pr-16 py-5 outline-none rounded-2xl text-base placeholder:text-white/35"
+              className="w-full min-w-0 bg-transparent text-white pl-6 pr-14 py-4 outline-none rounded-full text-base placeholder:text-gray-500"
             />
             {isLoading ? (
               <button
                 type="button"
                 onClick={() => abortRef.current?.abort()}
                 aria-label="Stop response"
-                className="absolute right-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl"
+                className="absolute right-2 p-2.5 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
               >
-                <Square className="w-4 h-4" />
+                <Square className="w-4 h-4 text-white" />
               </button>
             ) : (
               <button
                 type="submit"
                 disabled={!chatReady || !inputValue.trim()}
                 aria-label="Send question"
-                className="absolute right-3 p-3 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl transition-colors"
+                className="absolute right-2 p-2.5 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-white/10 disabled:cursor-not-allowed rounded-full transition-colors"
               >
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4 text-white" />
               </button>
             )}
           </form>
@@ -233,7 +244,7 @@ export function HeroSection() {
                   setInputValue(question);
                   inputRef.current?.focus();
                 }}
-                className="flex items-center gap-2 px-4 py-3 rounded-full border border-white/[0.08] bg-[#090909] hover:bg-white/[0.06] hover:border-white/25 transition-colors text-xs sm:text-sm text-white/70 hover:text-white"
+                className="text-xs md:text-sm bg-white/5 hover:bg-white/10 border border-white/10 px-3.5 py-1.5 rounded-full text-gray-400 hover:text-white transition-colors flex items-center gap-1.5"
               >
                 <Icon className="w-3.5 h-3.5" />
                 {label}
@@ -241,15 +252,15 @@ export function HeroSection() {
             ))}
           </RevealItem>
         ) : (
-          <div className="w-full max-w-2xl mt-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] uppercase tracking-[0.15em] text-white/40">
-                Golixco assistant
+          <div className="w-full max-w-2xl mt-6 bg-[#111] border border-white/10 rounded-3xl p-4 sm:p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-3">
+              <span className="font-pixel text-lg tracking-wider text-gray-400">
+                GolixcoBot
               </span>
               <button
                 disabled={isLoading}
                 onClick={clearChat}
-                className="flex gap-1.5 items-center p-2 text-xs text-white/55 hover:text-white disabled:opacity-30"
+                className="flex gap-1.5 items-center px-2 py-1 text-xs text-white/55 hover:text-white hover:bg-white/5 rounded-lg disabled:opacity-30 transition-colors"
               >
                 <RotateCcw className="w-3 h-3" />
                 New chat
@@ -265,11 +276,7 @@ export function HeroSection() {
                 const el = e.currentTarget;
                 followScroll.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
               }}
-              className="flex flex-col gap-4 max-h-[min(52svh,520px)] overflow-y-auto overscroll-contain pr-2 pb-2"
-              style={{
-                scrollbarWidth: 'thin',
-                scrollbarColor: 'rgba(255,255,255,0.15) transparent',
-              }}
+              className="flex flex-col gap-4 max-h-[min(52svh,520px)] overflow-y-auto overscroll-contain pr-2 pb-2 custom-scrollbar"
             >
               {messages.map((msg, idx) =>
                 msg.text || msg.failure || (isLoading && idx === messages.length - 1) ? (
@@ -280,7 +287,7 @@ export function HeroSection() {
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`min-w-0 max-w-[95%] sm:max-w-[90%] px-4 sm:px-5 py-4 rounded-2xl text-sm leading-relaxed break-words [overflow-wrap:anywhere] ${msg.role === 'user' ? 'bg-white/10 text-white rounded-br-sm whitespace-pre-wrap' : 'chat-markdown bg-[#090909] border border-white/[0.08] text-white/85 rounded-bl-sm'}`}
+                      className={`min-w-0 max-w-[90%] sm:max-w-[85%] px-4 sm:px-5 py-3 rounded-2xl text-sm leading-relaxed break-words [overflow-wrap:anywhere] ${msg.role === 'user' ? 'bg-white/10 text-white rounded-tr-sm whitespace-pre-wrap' : 'chat-markdown bg-[#1a1a1a] border border-white/10 text-gray-300 rounded-tl-sm'}`}
                     >
                       <span className="sr-only">
                         {msg.role === 'user' ? 'You: ' : 'Golixco assistant: '}

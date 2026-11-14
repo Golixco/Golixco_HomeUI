@@ -54,7 +54,11 @@ export function isCompanyRelated(message: string, history: ChatMessage[]): boole
   );
 }
 
-export function getLocalAnswer(message: string, history: ChatMessage[] = []): string | undefined {
+export function getLocalAnswer(
+  message: string,
+  history: ChatMessage[] = [],
+  options: { preferAI?: boolean } = {},
+): string | undefined {
   const text = normalize(message);
   if (
     /ignore.{0,40}(instruction|rule|previous)|system prompt|developer message|api.?key|secret|local (path|file)|reveal.{0,30}(prompt|identity)|pretend.{0,20}(unrestricted|system)|act as.{0,20}(unrestricted|system)/.test(
@@ -73,7 +77,40 @@ export function getLocalAnswer(message: string, history: ChatMessage[] = []): st
     return 'Hi! Ask me about Golixco, explore Lolixco, or find out what Creator Studio can do.';
   if (/^(bye|goodbye|see you|see ya)[!.\s]*$/.test(text)) return "See you!";
   if (/^(thanks|thank you)[!.\s]*$/.test(text)) return "You're welcome!";
+  if (/copyright|content.rights|\brights\b|takedown|removal|remove.*(video|content)/.test(text))
+    return `For copyright, content-rights or removal enquiries, email ${email(contacts.rights)}.`;
+
   const latestTopic = normalize(recentCompanyTopic(history) ?? '');
+  const recentStudio = /creator studio|dimension|score/.test(latestTopic);
+
+  // Exact canonical dimensions and ordinal scores must return the authoritative
+  // definitions even when AI is preferred, ensuring deterministic fidelity.
+  if (/six.*(score|dimension)|all.*(scores?|dimensions?)/.test(text) && text.length < 300) {
+    return studio();
+  }
+  if (
+    /visual craftsmanship/.test(text) ||
+    (/fourth|4th|score (4|four)|dimension (4|four)/.test(text) && recentStudio)
+  ) {
+    return `**4. ${dimensions[3].name}** looks at ${dimensions[3].description.charAt(0).toLowerCase() + dimensions[3].description.slice(1)} It is experimental feedback, not a guarantee of objective quality.`;
+  }
+  const ordinal = text.match(/\b(first|second|third|fifth|sixth)\b(?!-)/);
+  if (
+    ordinal &&
+    recentStudio &&
+    /\b(score|dimension|criterion|category|one)\b|\b(first|second|third|fifth|sixth)[?.!]*$/.test(text)
+  ) {
+    const index = { first: 0, second: 1, third: 2, fifth: 4, sixth: 5 }[ordinal[1]]!;
+    return `**${index + 1}. ${dimensions[index].name}** — ${dimensions[index].description}`;
+  }
+
+  // When AI inference is available and active, let the AI provider handle substantive
+  // conversational, explanatory, and follow-up questions so answers are intelligent,
+  // creative, and context-aware.
+  if (options.preferAI) {
+    if (!isCompanyRelated(message, history)) return REDIRECT;
+    return undefined;
+  }
   const designQuestion =
     /\b(yellow|gold|amber|colou?r[s]?|brand(?:ing)?|palette|visual identity|logo|emblem|theme)\b/.test(text);
   if (designQuestion) {
@@ -179,23 +216,8 @@ export function getLocalAnswer(message: string, history: ChatMessage[] = []): st
   );
   if (feature && text.length < 150 && /what|explain|how|tell|show/.test(text))
     return `**${feature[0]}** — ${feature[1]} ${link('Explore Lolixco', productLinks.home)}.`;
-  const recentStudio = /creator studio|dimension|score/.test(latestTopic);
   if (/support|input|upload|youtube url/.test(text) && /studio|analy|video/.test(text))
     return `Creator Studio accepts compatible local video uploads and eligible public YouTube URLs. Some inputs may not qualify, and analysis can return supported partial feedback rather than all six scores. ${link('Open Creator Studio', productLinks.studio)}.`;
-  if (
-    /visual craftsmanship/.test(text) ||
-    (/fourth|4th|score (4|four)|dimension (4|four)/.test(text) && recentStudio)
-  )
-    return `**4. ${dimensions[3].name}** looks at ${dimensions[3].description.charAt(0).toLowerCase() + dimensions[3].description.slice(1)} It is experimental feedback, not a guarantee of objective quality.`;
-  const ordinal = text.match(/\b(first|second|third|fifth|sixth)\b(?!-)/);
-  if (
-    ordinal &&
-    recentStudio &&
-    /\b(score|dimension|criterion|category|one)\b|\b(first|second|third|fifth|sixth)[?.!]*$/.test(text)
-  ) {
-    const index = { first: 0, second: 1, third: 2, fifth: 4, sixth: 5 }[ordinal[1]]!;
-    return `**${index + 1}. ${dimensions[index].name}** — ${dimensions[index].description}`;
-  }
   if (
     /accurat|always.*(score|six)|perfect|partial|reliab/.test(text) &&
     /score|ai|analy|studio|six|it/.test(text)

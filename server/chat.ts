@@ -268,7 +268,8 @@ export function createChatHandler(
       )
         throw new RequestError(413, 'Request is too large.');
       const { message, history } = validatePayload(body);
-      const localAnswer = getLocalAnswer(message, history);
+      const preferAI = Boolean(options.provider || process.env.GEMINI_API_KEY);
+      const localAnswer = getLocalAnswer(message, history, { preferAI });
       if (!localAnswer && !options.provider && !process.env.GEMINI_API_KEY) {
         json(
           503,

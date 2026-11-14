@@ -1,5 +1,18 @@
 # Verification history
 
+## Chatbot Rebuild Verification — 2026-11-14
+
+- **Feature Branch:** `feat/rebuild-chatbot-properly`
+- **Root Cause Resolution:** Replaced aggressive local regex interception in `server/knowledge.ts` with `{ preferAI: true }` AI-priority routing. Substantive queries genuinely reach Gemini for natural, non-repetitive responses, while deterministic guardrails (prompt injection, founder privacy, rights contact, and exact dimension specs) remain intact.
+- **Streaming Safety Recovery:** Solved upstream Gemini SSE stream interruptions (`finishReason: 'PROHIBITED_CONTENT'` triggered by split token boundaries) by implementing an automated recovery to atomic `generateContent` in `server/gemini.ts`.
+- **Live Multi-Turn AI Verification:** Verified 3-turn conversational coherence against live Gemini API (`gemini-3.5-flash-lite`):
+  1. *What is Golixco?* -> Comprehensive overview of company, mission, and products.
+  2. *How is Lolixco connected to it?* -> Correctly identified conversational context and explained the parent-product relationship.
+  3. *What makes Lolixco different?* -> Detailed Creator Studio, media-signal analysis, and 6 evaluation dimensions.
+- **Unit Test Suite:** All 75 tests in `tests/*.test.ts` pass cleanly (100% pass rate).
+- **TypeScript:** Strict `tsc --noEmit` clean with zero errors.
+- **Visual & Interaction Parity:** Extracted and applied visual metrics from reference `GolixcoBot` (`https://rohansonubablani.com/golixcobot` / `Golixco/golixco-portfolio`).
+
 ## Current Mission 02 result — 2026-11-10
 
 - Strict TypeScript and the production/prerender build pass.

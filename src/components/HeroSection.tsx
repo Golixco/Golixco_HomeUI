@@ -28,7 +28,7 @@ const questions = [
 ];
 
 export function HeroSection() {
-  const [chatReady, setChatReady] = useState(false);
+  const [chatReady, setChatReady] = useState(true);
   const [isFocused, setIsFocused] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
